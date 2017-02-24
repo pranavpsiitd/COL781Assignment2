@@ -1,88 +1,162 @@
-#include <GL/glut.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <GL/glew.h>
+#include <GL/freeglut.h>
+#include <iostream>
+using namespace std;
 
-static int shoulder = 0, elbow = 0, shoulder_z = 0;
+static int angle = 0;
 
-void init(void)
-{
-	glClearColor(0.0, 0.0, 0.0, 0.0);
-	glShadeModel(GL_FLAT);
+void drawHand() {
+	glRotatef((GLfloat)angle, 1.0f, 0.0f, 0.0f);
+	glPushMatrix();
+		glScalef(1.0f, 2.0f, 1.0f);
+		glRotatef((GLfloat)90,0.0f,1.0f,0.0f);
+		glutSolidCylinder(0.5f, 1.0f, 30, 30);
+	glPopMatrix();
+	glPushMatrix();
+		glScalef(1.0, 2.0, 1.0);
+		glutSolidSphere(0.5, 30, 30);
+	glPopMatrix();
+	glPushMatrix();
+		glTranslatef(1.0, 0.0, 0.0);
+		glScalef(1.0, 2.0, 1.0);
+		glutSolidSphere(0.5, 30, 30);
+	glPopMatrix();
+	glPushMatrix();
+		glRotatef(330, 0.0, 0.0, 1.0);
+		glRotatef(90, 0.0, 1.0, 0.0);
+		glutSolidCone(0.4, 3.0, 30, 30);
+		glPushMatrix();
+			glTranslatef(0.0, 0.0, (GLfloat)2.4);
+			glScalef(1.0, 1.0, 3.0);
+			glutSolidSphere(0.2, 10, 10);
+		glPopMatrix();
+	glPopMatrix();
+	glPushMatrix();
+		glRotatef(10, 0.0, 0.0, 1.0);
+		glRotatef(90, 0.0, 1.0, 0.0);
+		glutSolidCone(0.3, 3.5, 30, 30);
+		glPushMatrix();
+			glTranslatef(0.0, 0.0, (GLfloat)2.9);
+			glScalef(1.0, 1.0, 3.0);
+			glutSolidSphere(0.2, 10, 10);
+		glPopMatrix();
+	glPopMatrix();
+	glPushMatrix();
+		glRotatef(350, 0.0, 0.0, 1.0);
+		glRotatef(90, 0.0, 1.0, 0.0);
+		glutSolidCone(0.3, 3.5, 30, 30);
+		glPushMatrix();
+			glTranslatef(0.0, 0.0, (GLfloat)2.9);
+			glScalef(1.0, 1.0, 3.0);
+			glutSolidSphere(0.2, 10, 10);
+		glPopMatrix();
+	glPopMatrix();
+	glPushMatrix();
+		glRotatef(30, 0.0, 0.0, 1.0);
+		glRotatef(90, 0.0, 1.0, 0.0);
+		glutSolidCone(0.4, 3.0, 30, 30);
+		glPushMatrix();
+			glTranslatef(0.0, 0.0, (GLfloat)2.4);
+			glScalef(1.0, 1.0, 3.0);
+			glutSolidSphere(0.2, 10, 10);
+		glPopMatrix();
+	glPopMatrix();
 }
 
-void display(void)
-{
-	glClear(GL_COLOR_BUFFER_BIT);
-	glPushMatrix();
-	glTranslatef(-1.0, 0.0, 0.0);
-	glRotatef((GLfloat)shoulder_z, 0.0, 1.0, 0.0);
-	glRotatef((GLfloat)shoulder, 0.0, 0.0, 1.0);
-	glTranslatef(1.0, 0.0, 0.0);
-	glPushMatrix();
-	glScalef(2.0, 0.4, 1.0);
-	glutWireCube(1.0);
-	glPopMatrix();
-
-	glTranslatef(1.0, 0.0, 0.0);
-	glRotatef((GLfloat)elbow, 0.0, 0.0, 1.0);
-	glTranslatef(1.0, 0.0, 0.0);
-	glPushMatrix();
-	glScalef(2.0, 0.4, 1.0);
-	glutWireCube(1.0);
-	glPopMatrix();
-
-	glPopMatrix();
-	/*glPushMatrix();
-	glutWireSphere(1.0, 20, 16);
-	glRotatef((GLfloat)shoulder, 0.0, 1.0, 0.0);
-	glTranslatef(2.0, 0.0, 0.0);
-	glRotatef((GLfloat)elbow, 0.0, 1.0, 0.0);
-	glutWireSphere(0.2, 10, 8);
-	glPopMatrix();*/
-	glutSwapBuffers();
-}
-
-void reshape(int w, int h)
-{
-	glViewport(0, 0, (GLsizei)w, (GLsizei)h);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(65.0, (GLfloat)w / (GLfloat)h, 1.0, 20.0);
+void display() {
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_MODELVIEW);
+	/*glPushMatrix();
+
+	// Rotate the scene so we can see the tops of the shapes.
+	glRotatef(-20.0, 1.0, 0.0, 0.0);
+
+	// Make a torus floating 0.5 above the x-z plane.  The standard torus in
+	// the GLUT library is, perhaps surprisingly, a stack of circles which
+	// encircle the z-axis, so we need to rotate it 90 degrees about x to
+	// get it the way we want.
+	glPushMatrix();
+	glTranslatef(-0.75, 0.5, 0.0);
+	glRotatef(90.0, 1.0, 0.0, 0.0);
+	glutSolidTorus(0.275, 0.85, 16, 40);
+	glPopMatrix();
+
+	// Make a cone.  The standard cone "points" along z; we want it pointing
+	// along y, hence the 270 degree rotation about x.
+	glPushMatrix();
+	glTranslatef(-0.75, -0.5, 0.0);
+	glRotatef(270.0, 1.0, 0.0, 0.0);
+	glutSolidCone(1.0, 2.0, 70, 12);
+	glPopMatrix();
+
+	// Add a sphere to the scene.
+	glPushMatrix();
+	glTranslatef(0.75, 0.0, -1.0);
+	glutSolidSphere(1.0, 30, 30);
+	glPopMatrix();
+
+	glPopMatrix();*/
+	glPushMatrix();
+	drawHand();
+	glPopMatrix();
+	glFlush();
+}
+
+// We don't want the scene to get distorted when the window size changes, so
+// we need a reshape callback.  We'll always maintain a range of -2.5..2.5 in
+// the smaller of the width and height for our viewbox, and a range of -10..10
+// for the viewbox depth.
+void reshape(GLint w, GLint h) {
+	glViewport(0, 0, w, h);
+	glMatrixMode(GL_PROJECTION);
+	GLfloat aspect = GLfloat(w) / GLfloat(h);
 	glLoadIdentity();
-	glTranslatef(0.0, 0.0, -5.0);
+	if (w <= h) {
+		// width is smaller, so stretch out the height
+		glOrtho(-2.5, 2.5, -2.5 / aspect, 2.5 / aspect, -10.0, 10.0);
+	}
+	else {
+		// height is smaller, so stretch out the width
+		glOrtho(-2.5*aspect, 2.5*aspect, -2.5, 2.5, -10.0, 10.0);
+	}
 }
 
-void special(int key, int x, int y)
-{
+// Performs application specific initialization.  It defines lighting
+// parameters for light source GL_LIGHT0: black for ambient, yellow for
+// diffuse, white for specular, and makes it a directional source
+// shining along <-1, -1, -1>.  It also sets a couple material properties
+// to make cyan colored objects with a fairly low shininess value.  Lighting
+// and depth buffer hidden surface removal are enabled here.
+void init() {
+	GLfloat black[] = { 0.0, 0.0, 0.0, 1.0 };
+	GLfloat yellow[] = { 1.0, 1.0, 0.0, 1.0 };
+	GLfloat green[] = { 0.0, 1.0, 0.0, 1.0 };
+	GLfloat white[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat direction[] = { 1.0, 1.0, 1.0, 0.0 };
 
-	printf("%d\n", key);
+	glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, green);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, white);
+	glMaterialf(GL_FRONT, GL_SHININESS, 30);
 
+	glLightfv(GL_LIGHT0, GL_AMBIENT, black);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, white);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, white);
+	glLightfv(GL_LIGHT0, GL_POSITION, direction);
+
+	glEnable(GL_LIGHTING);                // so the renderer considers light
+	glEnable(GL_LIGHT0);                  // turn LIGHT0 on
+	glEnable(GL_DEPTH_TEST);              // so the renderer considers depth
 }
 
-/* ARGSUSED1 */
 void keyboard(unsigned char key, int x, int y)
 {
-	printf("%d\n", key);
 	switch (key) {
 	case 's':
-		shoulder = (shoulder + 5) % 360;
+		angle = (angle + 5) % 360;
 		glutPostRedisplay();
 		break;
 	case 'S':
-		shoulder = (shoulder - 5) % 360;
-		glutPostRedisplay();
-		break;
-	case 'e':
-		elbow = (elbow + 5) % 360;
-		glutPostRedisplay();
-		break;
-	case 'E':
-		elbow = (elbow - 5) % 360;
-		glutPostRedisplay();
-		break;
-	case 'z':
-		shoulder_z = (shoulder_z + 5) % 360;
+		angle = (angle - 5) % 360;
 		glutPostRedisplay();
 		break;
 	case 27:
@@ -93,18 +167,16 @@ void keyboard(unsigned char key, int x, int y)
 	}
 }
 
-int main(int argc, char** argv)
-{
+// The usual application statup code.
+int main(int argc, char** argv) {
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-	glutInitWindowSize(800, 600);
-	glutInitWindowPosition(100, 100);
-	glutCreateWindow(argv[0]);
-	init();
-	glutDisplayFunc(display);
+	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB | GLUT_DEPTH);
+	glutInitWindowPosition(80, 80);
+	glutInitWindowSize(1280, 720);
+	glutCreateWindow("Cyan Shapes in Yellow Light");
 	glutReshapeFunc(reshape);
+	glutDisplayFunc(display);
 	glutKeyboardUpFunc(keyboard);
-	glutSpecialUpFunc(special);
+	init();
 	glutMainLoop();
-	return 0;
 }
