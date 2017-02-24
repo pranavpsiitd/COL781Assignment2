@@ -3,10 +3,9 @@
 #include <iostream>
 using namespace std;
 
-static int angle = 0;
+static int angle = 35, hand=65, elbow=-45, shoulder=90;
 
 void drawHand() {
-	glRotatef((GLfloat)angle, 1.0f, 0.0f, 0.0f);
 	glPushMatrix();
 		glScalef(1.0f, 2.0f, 1.0f);
 		glRotatef((GLfloat)90,0.0f,1.0f,0.0f);
@@ -63,41 +62,41 @@ void drawHand() {
 	glPopMatrix();
 }
 
+void drawArmPart() {
+	glPushMatrix();
+		glRotatef((GLfloat)90, 0.0, 1.0, 0.0);
+		glutSolidCylinder(1.0f, 3.0f, 30, 30);
+		glutSolidSphere(1.0f, 30, 30);
+		glPushMatrix();
+			glTranslatef(0.0f, 0.0f, 3.0f);
+			glutSolidSphere(1.0f, 30, 30);
+		glPopMatrix();
+	glPopMatrix();
+}
+
+void drawArm() {
+	glRotatef((GLfloat)angle, 0.0, 1.0, 0.0);
+	glRotatef((GLfloat)shoulder, 1.0, 0.0, 0.0);
+	glScalef(0.5f, 0.5f, 0.5f);
+	drawArmPart();
+	glPushMatrix();
+		glTranslatef(3.0, 0.0, 0.0);
+		glRotatef((GLfloat)elbow, 0.0, 1.0, 0.0);
+		drawArmPart();
+		glPushMatrix();
+			glTranslatef(3.5f, 0.0f, 0.0f);
+			glRotatef((GLfloat)hand, 0.0, 0.0, 1.0);
+			glRotatef((GLfloat)90, 1.0, 0.0, 0.0);
+			drawHand();
+		glPopMatrix();
+	glPopMatrix();
+}
+
 void display() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_MODELVIEW);
-	/*glPushMatrix();
-
-	// Rotate the scene so we can see the tops of the shapes.
-	glRotatef(-20.0, 1.0, 0.0, 0.0);
-
-	// Make a torus floating 0.5 above the x-z plane.  The standard torus in
-	// the GLUT library is, perhaps surprisingly, a stack of circles which
-	// encircle the z-axis, so we need to rotate it 90 degrees about x to
-	// get it the way we want.
 	glPushMatrix();
-	glTranslatef(-0.75, 0.5, 0.0);
-	glRotatef(90.0, 1.0, 0.0, 0.0);
-	glutSolidTorus(0.275, 0.85, 16, 40);
-	glPopMatrix();
-
-	// Make a cone.  The standard cone "points" along z; we want it pointing
-	// along y, hence the 270 degree rotation about x.
-	glPushMatrix();
-	glTranslatef(-0.75, -0.5, 0.0);
-	glRotatef(270.0, 1.0, 0.0, 0.0);
-	glutSolidCone(1.0, 2.0, 70, 12);
-	glPopMatrix();
-
-	// Add a sphere to the scene.
-	glPushMatrix();
-	glTranslatef(0.75, 0.0, -1.0);
-	glutSolidSphere(1.0, 30, 30);
-	glPopMatrix();
-
-	glPopMatrix();*/
-	glPushMatrix();
-	drawHand();
+	drawArm();
 	glPopMatrix();
 	glFlush();
 }
@@ -146,17 +145,46 @@ void init() {
 	glEnable(GL_LIGHTING);                // so the renderer considers light
 	glEnable(GL_LIGHT0);                  // turn LIGHT0 on
 	glEnable(GL_DEPTH_TEST);              // so the renderer considers depth
+	glEnable(GL_NORMALIZE);
 }
 
 void keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
-	case 's':
+	case 'a':
 		angle = (angle + 5) % 360;
+		cout << angle << endl;
+		glutPostRedisplay();
+		break;
+	case 'A':
+		angle = (angle - 5) % 360;
+		glutPostRedisplay();
+		break;
+	case 's':
+		shoulder = (shoulder + 5) % 360;
+		cout << shoulder << endl;
 		glutPostRedisplay();
 		break;
 	case 'S':
-		angle = (angle - 5) % 360;
+		shoulder = (shoulder - 5) % 360;
+		glutPostRedisplay();
+		break;
+	case 'e':
+		elbow = (elbow + 5) % 360;
+		cout << elbow << endl;
+		glutPostRedisplay();
+		break;
+	case 'E':
+		elbow = (elbow - 5) % 360;
+		glutPostRedisplay();
+		break;
+	case 'h':
+		hand = (hand + 5) % 360;
+		cout << hand << endl;
+		glutPostRedisplay();
+		break;
+	case 'H':
+		hand = (hand - 5) % 360;
 		glutPostRedisplay();
 		break;
 	case 27:
