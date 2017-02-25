@@ -1,10 +1,42 @@
 #include <GL/glew.h>//This header file also includes the correct OpenGL headers like GL/gl.h
 #include <GL/freeglut.h>
 #include <iostream>
+#include <vector>
+#include <Windows.h>
 
 using namespace std;
 
-static int angle = 35, hand=65, elbow=-45, shoulder=90;
+//MACROS
+#define START_FRAME 0
+#define END_FRAME 30
+#define epsilon 0.001
+#define FPS 30.0f
+#define TOTAL_FRAMES 10.0f
+//Total frames to be done in the linear interpolation during the interval between consecutive key-frames
+
+//structure for parameters of the different joints
+struct model_parameters {
+	float hand_rotation;
+};
+
+vector<model_parameters> keyFrames;
+
+//parameters for rotation of arm
+static float hand = 45.0f; //for rotation w.r.t. the hand joint
+static int elbow = -45;//for rotation w.r.t. the elbow joint  
+static int shoulder = 90;//for rotation of the segment from the shoulder joint around x-axis
+static int angle = 0;//this should be rotation angle around z-axis
+
+//global variables
+int startTime;
+int elapsedTime;
+int currentFrame;
+float t_interpolation;
+
+//function declarations
+void animate();
+void fillKeyFrames();
+float lerp(float x, float y, float t);
 
 void drawHand() {
 	glPushMatrix();
@@ -63,6 +95,7 @@ void drawHand() {
 	glPopMatrix();
 }
 
+//basically used for drawing both the arm segments
 void drawArmPart() {
 	glPushMatrix();
 		glRotatef((GLfloat)90, 0.0, 1.0, 0.0);
@@ -79,29 +112,32 @@ void drawArm() {
 	glRotatef((GLfloat)angle, 0.0, 1.0, 0.0);
 	glRotatef((GLfloat)shoulder, 1.0, 0.0, 0.0);
 	glScalef(0.5f, 0.5f, 0.5f);
-	drawArmPart();
+	drawArmPart();//drawing the shoulder
 	glPushMatrix();
 		glTranslatef(3.0, 0.0, 0.0);
 		glRotatef((GLfloat)elbow, 0.0, 1.0, 0.0);
-		drawArmPart();
+		drawArmPart();//drawing the elbow
 		glPushMatrix();
 			glTranslatef(3.5f, 0.0f, 0.0f);
 			glRotatef((GLfloat)hand, 0.0, 0.0, 1.0);
 			glRotatef((GLfloat)90, 1.0, 0.0, 0.0);
-			drawHand();
+			drawHand();//drawing the hand
 		glPopMatrix();
 	glPopMatrix();
 }
 
 void display() {
-	//clear the current buffer
+	//clear the current buffer (back buffer)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
+	glMatrixMode(GL_MODELVIEW);//Specifies which matrix stack is the target for subsequent matrix operations.
+							   
+	//drawing the arm
+	glPushMatrix();//duplicate the top of the stack
 	drawArm();
-	glPopMatrix();
+	glPopMatrix();//remove the top of stack
 	
+	//swap the front and back buffers.
 	glutSwapBuffers();
 }
 
@@ -182,7 +218,7 @@ void keyboard(unsigned char key, int x, int y)
 		elbow = (elbow - 5) % 360;
 		glutPostRedisplay();
 		break;
-	case 'h':
+	/*case 'h':
 		hand = (hand + 5) % 360;
 		cout << hand << endl;
 		glutPostRedisplay();
@@ -190,14 +226,21 @@ void keyboard(unsigned char key, int x, int y)
 	case 'H':
 		hand = (hand - 5) % 360;
 		glutPostRedisplay();
+		break;*/
+	case 32://Space bar
+		//Animation
+		currentFrame = START_FRAME;
+		fillKeyFrames();//initialize the keyFrames vector
+		glutIdleFunc(animate);//register idle callback
 		break;
-	case 27:
+	case 27://ASCII code for Escape Key
 		exit(0);
 		break;
 	default:
 		break;
 	}
 }
+
 
 // The usual application statup code.
 int main(int argc, char** argv) {
@@ -219,8 +262,42 @@ int main(int argc, char** argv) {
 	//initializing the light sources and enabling the hidden surface removal
 	init();
 
+	cout << "Press Space Bar for animation" << endl;
 	// enter GLUT event processing cycle
 	glutMainLoop();//enter the event loop
 
 	return 0;//unreachable return statement :P
+}
+
+void animate() {
+	elapsedTime = glutGet(GLUT_ELAPSED_TIME);
+	t_interpolation = ((elapsedTime - startTime)*(FPS))/(1000.0f * TOTAL_FRAMES);
+	int next_frame = currentFrame + 1;
+	
+	hand = lerp(keyFrames[currentFrame].hand_rotation, keyFrames[next_frame].hand_rotation,t_interpolation);
+	
+	glutPostRedisplay();
+	
+	if (t_interpolation > 1.0f - epsilon) {
+		currentFrame++;
+		if (currentFrame == END_FRAME)
+			glutIdleFunc(NULL);
+		startTime = glutGet(GLUT_ELAPSED_TIME);
+	}
+}
+
+void fillKeyFrames() {
+	keyFrames.clear();
+	keyFrames.push_back(model_parameters());
+	keyFrames[START_FRAME].hand_rotation = hand;
+	for (int i = 1; i <= END_FRAME; i++) {
+		keyFrames.push_back(model_parameters());
+		keyFrames[i].hand_rotation = keyFrames[i-1].hand_rotation - 3.0f;
+	}
+}
+
+float lerp(float x, float y, float t) {
+	if (t > 1 - epsilon)
+		t = 1.0f;
+	return x + t*(y - x);
 }
