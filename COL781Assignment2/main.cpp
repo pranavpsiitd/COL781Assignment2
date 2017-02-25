@@ -1,6 +1,7 @@
-#include <GL/glew.h>
+#include <GL/glew.h>//This header file also includes the correct OpenGL headers like GL/gl.h
 #include <GL/freeglut.h>
 #include <iostream>
+
 using namespace std;
 
 static int angle = 35, hand=65, elbow=-45, shoulder=90;
@@ -93,12 +94,15 @@ void drawArm() {
 }
 
 void display() {
+	//clear the current buffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	drawArm();
 	glPopMatrix();
-	glFlush();
+	
+	glutSwapBuffers();
 }
 
 // We don't want the scene to get distorted when the window size changes, so
@@ -197,14 +201,26 @@ void keyboard(unsigned char key, int x, int y)
 
 // The usual application statup code.
 int main(int argc, char** argv) {
+	// init GLUT and create window
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB | GLUT_DEPTH);
-	glutInitWindowPosition(80, 80);
-	glutInitWindowSize(1280, 720);
-	glutCreateWindow("Cyan Shapes in Yellow Light");
-	glutReshapeFunc(reshape);
-	glutDisplayFunc(display);
-	glutKeyboardUpFunc(keyboard);
+	//double buffer window, color model - RGB, depth buffer
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+
+	glutInitWindowPosition(40, 20);// First we establish the window’s position, i.e. its top left corner.
+	glutInitWindowSize(1280, 720);//prototype - void glutInitWindowSize(int width, int height)
+	//create Window
+	glutCreateWindow("Frog Jump");
+
+	//register callbacks
+	glutReshapeFunc(reshape);//register reshape callback function
+	glutDisplayFunc(display);//register display callback function
+	glutKeyboardUpFunc(keyboard);//register keyboard press callback function
+
+	//initializing the light sources and enabling the hidden surface removal
 	init();
-	glutMainLoop();
+
+	// enter GLUT event processing cycle
+	glutMainLoop();//enter the event loop
+
+	return 0;//unreachable return statement :P
 }
