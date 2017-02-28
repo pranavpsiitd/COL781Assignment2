@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <Windows.h>
-
+#include <soil.h>
 using namespace std;
 
 //MACROS
@@ -33,77 +33,71 @@ int elapsedTime;
 int currentFrame;
 float t_interpolation;
 
+GLuint textureId; //The id of the texture
+GLUquadric *quad; //quadric object to handle textute coordinates for glu primitives
+
 //function declarations
 void animate();
 void fillKeyFrames();
 float lerp(float x, float y, float t);
 
+//for loading texture from an image file and returning the texture id
+GLuint loadTexture() {
+	GLuint _textureId;
+	glGenTextures(1, &_textureId); //Make room for our texture
+	glBindTexture(GL_TEXTURE_2D, _textureId); //Tell OpenGL which texture to edit
+
+	//Map the image to the texture:-
+	int width, height;
+	unsigned char* image = SOIL_load_image("tex3.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+	cout << width << " " << height << endl;
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+
+	return _textureId; //Returns the id of the texture
+
+}
+
+//for drawing hand of frog
 void drawHand() {
 	glPushMatrix();
 		glScalef(1.0f, 2.0f, 1.0f);
 		glRotatef((GLfloat)90,0.0f,1.0f,0.0f);
-		glutSolidCylinder(0.5f, 1.0f, 30, 30);
+		gluCylinder(quad,0.5f,0.5f, 1.0f, 30, 30);
 	glPopMatrix();
 	glPushMatrix();
 		glScalef(1.0, 2.0, 1.0);
-		glutSolidSphere(0.5, 30, 30);
+		gluSphere(quad,0.5, 30, 30);
 	glPopMatrix();
 	glPushMatrix();
 		glTranslatef(1.0, 0.0, 0.0);
 		glScalef(1.0, 2.0, 1.0);
-		glutSolidSphere(0.5, 30, 30);
+		gluSphere(quad,0.5, 30, 30);
 	glPopMatrix();
-	glPushMatrix();
-		glRotatef(330, 0.0, 0.0, 1.0);
-		glRotatef(90, 0.0, 1.0, 0.0);
-		glutSolidCone(0.4, 3.0, 30, 30);
+	//drawing the fingers:-
+	for (int theta = -30; theta <= 30; theta += 20) {
+		bool flag = (abs(theta) == 10);//flag to differentiate b/w middle longer fingers v/s lateral shorter fingers
 		glPushMatrix();
-			glTranslatef(0.0, 0.0, (GLfloat)2.4);
-			glScalef(1.0, 1.0, 3.0);
-			glutSolidSphere(0.2, 10, 10);
+			glRotatef(theta, 0.0, 0.0, 1.0);
+			glRotatef(90, 0.0, 1.0, 0.0);
+			flag ? gluCylinder(quad, 0.3, 0.0, 3.5, 30, 30) : gluCylinder(quad, 0.4, 0.0, 3.0, 30, 30);
+			glPushMatrix();
+				flag ? glTranslatef(0.0, 0.0, (GLfloat)2.9) : glTranslatef(0.0, 0.0, (GLfloat)2.4);
+				glScalef(1.0, 1.0, 3.0);
+				gluSphere(quad, 0.2, 10, 10);
+			glPopMatrix();
 		glPopMatrix();
-	glPopMatrix();
-	glPushMatrix();
-		glRotatef(10, 0.0, 0.0, 1.0);
-		glRotatef(90, 0.0, 1.0, 0.0);
-		glutSolidCone(0.3, 3.5, 30, 30);
-		glPushMatrix();
-			glTranslatef(0.0, 0.0, (GLfloat)2.9);
-			glScalef(1.0, 1.0, 3.0);
-			glutSolidSphere(0.2, 10, 10);
-		glPopMatrix();
-	glPopMatrix();
-	glPushMatrix();
-		glRotatef(350, 0.0, 0.0, 1.0);
-		glRotatef(90, 0.0, 1.0, 0.0);
-		glutSolidCone(0.3, 3.5, 30, 30);
-		glPushMatrix();
-			glTranslatef(0.0, 0.0, (GLfloat)2.9);
-			glScalef(1.0, 1.0, 3.0);
-			glutSolidSphere(0.2, 10, 10);
-		glPopMatrix();
-	glPopMatrix();
-	glPushMatrix();
-		glRotatef(30, 0.0, 0.0, 1.0);
-		glRotatef(90, 0.0, 1.0, 0.0);
-		glutSolidCone(0.4, 3.0, 30, 30);
-		glPushMatrix();
-			glTranslatef(0.0, 0.0, (GLfloat)2.4);
-			glScalef(1.0, 1.0, 3.0);
-			glutSolidSphere(0.2, 10, 10);
-		glPopMatrix();
-	glPopMatrix();
+	}
 }
 
 //basically used for drawing both the arm segments
 void drawArmPart() {
 	glPushMatrix();
 		glRotatef((GLfloat)90, 0.0, 1.0, 0.0);
-		glutSolidCylinder(1.0f, 3.0f, 30, 30);
-		glutSolidSphere(1.0f, 30, 30);
+		gluCylinder(quad,1.0f,1.0f, 3.0f, 30, 30);
+		gluSphere(quad,1.0f, 30, 30);
 		glPushMatrix();
 			glTranslatef(0.0f, 0.0f, 3.0f);
-			glutSolidSphere(1.0f, 30, 30);
+			gluSphere(quad,1.0f, 30, 30);
 		glPopMatrix();
 	glPopMatrix();
 }
@@ -131,6 +125,13 @@ void display() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glMatrixMode(GL_MODELVIEW);//Specifies which matrix stack is the target for subsequent matrix operations.
+	
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, textureId);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	gluQuadricTexture(quad, 1);
+
 							   
 	//drawing the arm
 	glPushMatrix();//duplicate the top of the stack
@@ -186,6 +187,10 @@ void init() {
 	glEnable(GL_LIGHT0);                  // turn LIGHT0 on
 	glEnable(GL_DEPTH_TEST);              // so the renderer considers depth
 	glEnable(GL_NORMALIZE);
+	glEnable(GL_COLOR_MATERIAL);		   //to allow or disallow merging of material color with texture
+
+	quad = gluNewQuadric();				   //initialize the quadric object
+	textureId = loadTexture();			   //load texture from file and store its id
 }
 
 void keyboard(unsigned char key, int x, int y)
