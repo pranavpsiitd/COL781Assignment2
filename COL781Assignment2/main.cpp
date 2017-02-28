@@ -2,12 +2,8 @@
 #include <GL/freeglut.h>
 #include <iostream>
 #include <vector>
-<<<<<<< Updated upstream
-#include <Windows.h>
 #include <soil.h>
-=======
 
->>>>>>> Stashed changes
 using namespace std;
 
 //MACROS
