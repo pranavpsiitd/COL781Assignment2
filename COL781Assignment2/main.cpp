@@ -2,8 +2,12 @@
 #include <GL/freeglut.h>
 #include <iostream>
 #include <vector>
+<<<<<<< Updated upstream
 #include <Windows.h>
 #include <soil.h>
+=======
+
+>>>>>>> Stashed changes
 using namespace std;
 
 //MACROS
@@ -12,7 +16,7 @@ using namespace std;
 #define epsilon 0.001
 #define FPS 30.0f
 #define TOTAL_FRAMES 10.0f
-//Total frames to be done in the linear interpolation during the interval between consecutive key-frames
+//Total frames to be displayed in the linear interpolation performed during the interval between consecutive key-frames
 
 //structure for parameters of the different joints
 struct model_parameters {
