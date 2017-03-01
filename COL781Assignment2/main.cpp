@@ -49,9 +49,9 @@ GLuint loadTexture() {
 
 	//Map the image to the texture:-
 	int width, height;
-	unsigned char* image = SOIL_load_image("tex3.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+	unsigned char* image = SOIL_load_image("tex1.jpg", &width, &height, 0, SOIL_LOAD_RGBA);
 	cout << width << " " << height << endl;
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
 
 	return _textureId; //Returns the id of the texture
 
@@ -128,6 +128,13 @@ void display() {
 	
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, textureId);
+	
+	//To change the model from 
+	//RGB = (diffuse + specular)* (base_texture)     and hence max value of each pixel is base_texture 
+	//to 
+	//RGB = (diffuse * base_texture) + specular      where max value can now increase for specular highlights
+	glLightModelf(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
+
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	gluQuadricTexture(quad, 1);
@@ -170,12 +177,12 @@ void reshape(GLint w, GLint h) {
 void init() {
 	GLfloat black[] = { 0.0, 0.0, 0.0, 1.0 };
 	GLfloat yellow[] = { 1.0, 1.0, 0.0, 1.0 };
-	GLfloat green[] = { 0.0, 1.0, 0.0, 1.0 };
+	GLfloat gray[] = { 0.5, .5, 0.5, 1.0 };
 	GLfloat white[] = { 1.0, 1.0, 1.0, 1.0 };
 	GLfloat direction[] = { 1.0, 1.0, 1.0, 0.0 };
 
-	glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, green);
-	glMaterialfv(GL_FRONT, GL_SPECULAR, white);
+	glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, white);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, gray);
 	glMaterialf(GL_FRONT, GL_SHININESS, 30);
 
 	glLightfv(GL_LIGHT0, GL_AMBIENT, black);
@@ -187,7 +194,6 @@ void init() {
 	glEnable(GL_LIGHT0);                  // turn LIGHT0 on
 	glEnable(GL_DEPTH_TEST);              // so the renderer considers depth
 	glEnable(GL_NORMALIZE);
-	glEnable(GL_COLOR_MATERIAL);		   //to allow or disallow merging of material color with texture
 
 	quad = gluNewQuadric();				   //initialize the quadric object
 	textureId = loadTexture();			   //load texture from file and store its id
