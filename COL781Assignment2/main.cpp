@@ -41,7 +41,8 @@ int elapsedTime;
 int currentFrame;
 float t_interpolation;
 
-GLuint textureId; //The id of the texture
+GLuint textureId; //The id of the skin texture
+GLuint eyeTextureId; //The id of eye texture
 GLUquadric *quad; //quadric object to handle textute coordinates for glu primitives
 
 //function declarations
@@ -49,19 +50,22 @@ void animate();
 void fillKeyFrames();
 float lerp(float x, float y, float t);
 
-//for loading texture from an image file and returning the texture id
-GLuint loadTexture() {
-	GLuint _textureId;
-	glGenTextures(1, &_textureId); //Make room for our texture
-	glBindTexture(GL_TEXTURE_2D, _textureId); //Tell OpenGL which texture to edit
-
-	//Map the image to the texture:-
+//for loading skin and eye textures from image files
+void loadTexture() {
+	//Eye texture:-
+	glGenTextures(1, &eyeTextureId); //Make room for our texture
+	glBindTexture(GL_TEXTURE_2D, eyeTextureId); //Tell OpenGL which texture to edit
 	int width, height;
-	unsigned char* image = SOIL_load_image("tex1.jpg", &width, &height, 0, SOIL_LOAD_RGBA);
-	cout << width << " " << height << endl;
+	unsigned char* image = SOIL_load_image("eye.jpg", &width, &height, 0, SOIL_LOAD_RGBA);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
 
-	return _textureId; //Returns the id of the texture
+	//Skin Texture:-
+	glGenTextures(1, &textureId); //Make room for our texture
+	glBindTexture(GL_TEXTURE_2D, textureId); //Tell OpenGL which texture to edit
+	//Map the image to the texture:-
+	image = SOIL_load_image("tex1.jpg", &width, &height, 0, SOIL_LOAD_RGBA);
+	cout << width << " " << height << endl;
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
 
 }
 
@@ -85,7 +89,7 @@ void drawHand() {
 	for (int theta = -30; theta <= 30; theta += 20) {
 		bool flag = (abs(theta) == 10);//flag to differentiate b/w middle longer fingers v/s lateral shorter fingers
 		glPushMatrix();
-			glRotatef(theta, 0.0, 0.0, 1.0);
+			glRotatef((GLfloat)theta, 0.0, 0.0, 1.0);
 			glRotatef(90, 0.0, 1.0, 0.0);
 			flag ? gluCylinder(quad, 0.3, 0.0, 3.5, 30, 30) : gluCylinder(quad, 0.4, 0.0, 3.0, 30, 30);
 			glPushMatrix();
@@ -189,6 +193,26 @@ void drawLeg() {
 	glPopMatrix();
 }
 
+void drawTorso() {
+	glRotatef((GLfloat)leg1Y, 1.0f, 0.0f, 0.0f);
+	glPushMatrix();
+	glTranslatef(1.0f, 0.0f, 0.0f);
+	glBindTexture(GL_TEXTURE_2D, eyeTextureId);
+	glRotatef((GLfloat)-90, 1.0f, 0.0f, 0.0f);
+	gluSphere(quad, 1.0f, 30, 30);
+	glBindTexture(GL_TEXTURE_2D, textureId);
+	glPopMatrix();
+	glPushMatrix();
+		//drawing the body:-
+		glScalef(2.0f, 1.0f, 1.0f);
+		glRotatef((GLfloat)180, 1.0f, 0.0f, 0.0f);
+		glRotatef((GLfloat)90, 0.0f, 1.0f, 0.0f);
+		gluSphere(quad, 1.0f, 10, 30);
+	glPopMatrix();
+
+
+}
+
 void display() {
 	//clear the current buffer (back buffer)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -196,7 +220,15 @@ void display() {
 	glMatrixMode(GL_MODELVIEW);//Specifies which matrix stack is the target for subsequent matrix operations.
 	
 	glEnable(GL_TEXTURE_2D);
+	//Texture properties for eye texture:-
+	glBindTexture(GL_TEXTURE_2D, eyeTextureId);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	//Texture properties for skin texture:-
 	glBindTexture(GL_TEXTURE_2D, textureId);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	
 	//To change the model from 
 	//RGB = (diffuse + specular)* (base_texture)     and hence max value of each pixel is base_texture 
@@ -204,15 +236,13 @@ void display() {
 	//RGB = (diffuse * base_texture) + specular      where max value can now increase for specular highlights
 	glLightModelf(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	gluQuadricTexture(quad, 1);
+	gluQuadricTexture(quad, 1);	//initializing the quadric object
 
 							   
-	//drawing the arm
+	//drawing the model
 	glPushMatrix();//duplicate the top of the stack
-	glScalef(0.125f, 0.125f, 0.125f);
-	drawLeg();
+	glScalef(0.5f, 0.5f, 0.5f);
+	drawTorso();
 	glPopMatrix();//remove the top of stack
 	
 	//swap the front and back buffers.
@@ -266,7 +296,7 @@ void init() {
 	glEnable(GL_NORMALIZE);
 
 	quad = gluNewQuadric();				   //initialize the quadric object
-	textureId = loadTexture();			   //load texture from file and store its id
+	loadTexture();			   //load texture from file and store its id
 }
 
 void keyboard(unsigned char key, int x, int y)
