@@ -27,6 +27,14 @@ static int elbow = -45;//for rotation w.r.t. the elbow joint
 static int shoulder = 90;//for rotation of the segment from the shoulder joint around x-axis
 static int angle = 0;//this should be rotation angle around z-axis
 
+//parameters for rotation of leg
+static int foot = 40;
+static int leg3 = 90;
+static int leg2 = -130;
+static int leg1X = 90;//constant during jump
+static int leg1Y = 0;//constant during jump
+static int leg1Z = 0;
+
 //global variables
 int startTime;
 int elapsedTime;
@@ -105,7 +113,6 @@ void drawArmPart() {
 void drawArm() {
 	glRotatef((GLfloat)angle, 0.0, 1.0, 0.0);
 	glRotatef((GLfloat)shoulder, 1.0, 0.0, 0.0);
-	glScalef(0.5f, 0.5f, 0.5f);
 	drawArmPart();//drawing the shoulder
 	glPushMatrix();
 		glTranslatef(3.0, 0.0, 0.0);
@@ -116,6 +123,68 @@ void drawArm() {
 			glRotatef((GLfloat)hand, 0.0, 0.0, 1.0);
 			glRotatef((GLfloat)90, 1.0, 0.0, 0.0);
 			drawHand();//drawing the hand
+		glPopMatrix();
+	glPopMatrix();
+}
+
+//for drawing the top part of leg
+void drawLeg1() {
+	glPushMatrix();
+		glRotatef((GLfloat)90, 0.0, 1.0, 0.0);
+		gluCylinder(quad, 1.125f, 1.125f, 6.0f, 30, 30);
+		gluSphere(quad, 1.125f, 30, 30);
+		glPushMatrix();
+			glTranslatef(0.0f, 0.0f, 6.0f);
+			gluSphere(quad, 1.125f, 30, 30);
+		glPopMatrix();
+	glPopMatrix();
+}
+
+//for drawing second tapered part of leg
+void drawLeg2() {
+	glPushMatrix();
+		glRotatef((GLfloat)90, 0.0, 1.0, 0.0);
+		gluCylinder(quad, 1.125f, 1.0f, 6.0f, 30, 30);
+		gluSphere(quad, 1.125f, 30, 30);
+		glPushMatrix();
+			glTranslatef(0.0f, 0.0f, 6.0f);
+			gluSphere(quad, 1.0f, 30, 30);
+		glPopMatrix();
+	glPopMatrix();
+}
+
+//for drawing last part of leg
+void drawLeg3() {
+	glPushMatrix();
+		glRotatef((GLfloat)90, 0.0, 1.0, 0.0);
+		gluCylinder(quad, 1.0f, 0.75f, 3.0f, 30, 30);
+		gluSphere(quad, 1.0f, 30, 30);
+		glPushMatrix();
+			glTranslatef(0.0f, 0.0f, 3.0f);
+			gluSphere(quad, 0.75f, 30, 30);
+		glPopMatrix();
+	glPopMatrix();
+}
+
+void drawLeg() {
+	glRotatef((GLfloat)leg1Z, 0.0f, 0.0f, 1.0f);
+	glRotatef((GLfloat)leg1Y, 0.0f, 1.0f, 0.0f);
+	glRotatef((GLfloat)leg1X, 1.0f, 0.0f, 0.0f);
+	drawLeg1();
+	glPushMatrix();
+		glTranslatef(6.0f, 0.0f, 0.0f);
+		glRotatef((GLfloat)leg2, 0.0f, 1.0f, 0.0f);
+		drawLeg2();
+		glPushMatrix();
+			glTranslatef(6.0f, 0.0f, 0.0f);
+			glRotatef((GLfloat)leg3, 0.0f, 1.0f, 0.0f);
+			drawLeg3();
+			glPushMatrix();//drawing the foot
+				glTranslatef(3.0f, 0.0f, 0.0f);
+				glRotatef((GLfloat)foot, 0.0f, 1.0f, 0.0f);
+				glScalef(2.0f, 0.75f, 1.0f);//foot is represented as an elongated hand
+				drawHand();
+			glPopMatrix();
 		glPopMatrix();
 	glPopMatrix();
 }
@@ -142,7 +211,8 @@ void display() {
 							   
 	//drawing the arm
 	glPushMatrix();//duplicate the top of the stack
-	drawArm();
+	glScalef(0.125f, 0.125f, 0.125f);
+	drawLeg();
 	glPopMatrix();//remove the top of stack
 	
 	//swap the front and back buffers.
@@ -202,7 +272,7 @@ void init() {
 void keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
-	case 'a':
+	/*case 'a':
 		angle = (angle + 5) % 360;
 		cout << angle << endl;
 		glutPostRedisplay();
@@ -229,7 +299,7 @@ void keyboard(unsigned char key, int x, int y)
 		elbow = (elbow - 5) % 360;
 		glutPostRedisplay();
 		break;
-	/*case 'h':
+	case 'h':
 		hand = (hand + 5) % 360;
 		cout << hand << endl;
 		glutPostRedisplay();
@@ -237,12 +307,72 @@ void keyboard(unsigned char key, int x, int y)
 	case 'H':
 		hand = (hand - 5) % 360;
 		glutPostRedisplay();
-		break;*/
+		break;
 	case 32://Space bar
 		//Animation
 		currentFrame = START_FRAME;
 		fillKeyFrames();//initialize the keyFrames vector
 		glutIdleFunc(animate);//register idle callback
+		break;*/
+	case 'z':
+		foot = (foot + 5) % 360;
+		cout << "foot: " << foot << endl;
+		glutPostRedisplay();
+		break;
+	case 'Z':
+		foot = (foot - 5) % 360;
+		cout << "foot: " << foot << endl;
+		glutPostRedisplay();
+		break;
+	case 'x':
+		leg3 = (leg3 + 5) % 360;
+		cout << "leg3: " << leg3 << endl;
+		glutPostRedisplay();
+		break;
+	case 'X':
+		leg3 = (leg3 - 5) % 360;
+		cout << "leg3: " << leg3 << endl;
+		glutPostRedisplay();
+		break;
+	case 'c':
+		leg2 = (leg2 + 5) % 360;
+		cout << "leg2: " << leg2 << endl;
+		glutPostRedisplay();
+		break;
+	case 'C':
+		leg2 = (leg2 - 5) % 360;
+		cout << "leg2: " << leg2 << endl;
+		glutPostRedisplay();
+		break;
+	case 'v':
+		leg1X = (leg1X + 5) % 360;
+		cout << "leg1X: " << leg1X << endl;
+		glutPostRedisplay();
+		break;
+	case 'V':
+		leg1X = (leg1X - 5) % 360;
+		cout << "leg1X: " << leg1X << endl;
+		glutPostRedisplay();
+		break;
+	case 'b':
+		leg1Y = (leg1Y + 5) % 360;
+		cout << "leg1Y: " << leg1Y << endl;
+		glutPostRedisplay();
+		break;
+	case 'B':
+		leg1Y = (leg1Y - 5) % 360;
+		cout << "leg1Y: " << leg1Y << endl;
+		glutPostRedisplay();
+		break;
+	case 'n':
+		leg1Z = (leg1Z + 5) % 360;
+		cout << "leg1Z: " << leg1Z << endl;
+		glutPostRedisplay();
+		break;
+	case 'N':
+		leg1Z = (leg1Z - 5) % 360;
+		cout << "leg1Z: " << leg1Z << endl;
+		glutPostRedisplay();
 		break;
 	case 27://ASCII code for Escape Key
 		exit(0);
@@ -273,7 +403,7 @@ int main(int argc, char** argv) {
 	//initializing the light sources and enabling the hidden surface removal
 	init();
 
-	cout << "Press Space Bar for animation" << endl;
+	cout << "Press b for rotation about vertical.\nKey prompts for joints:z,x,c,n" << endl;
 	// enter GLUT event processing cycle
 	glutMainLoop();//enter the event loop
 
