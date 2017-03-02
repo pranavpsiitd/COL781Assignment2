@@ -28,12 +28,12 @@ static int shoulder = 90;//for rotation of the segment from the shoulder joint a
 static int angle = 0;//this should be rotation angle around z-axis
 
 //parameters for rotation of leg
-static int foot = 40;
+static int foot = 60;
 static int leg3 = 90;
 static int leg2 = -130;
 static int leg1X = 90;//constant during jump
 static int leg1Y = 0;//constant during jump
-static int leg1Z = 0;
+static int leg1Z = -20;
 
 //global variables
 int startTime;
@@ -167,8 +167,8 @@ void drawLeg3() {
 }
 
 void drawLeg() {
-	glRotatef((GLfloat)leg1Z, 0.0f, 0.0f, 1.0f);
 	glRotatef((GLfloat)leg1Y, 0.0f, 1.0f, 0.0f);
+	glRotatef((GLfloat)leg1Z, 0.0f, 0.0f, 1.0f);
 	glRotatef((GLfloat)leg1X, 1.0f, 0.0f, 0.0f);
 	drawLeg1();
 	glPushMatrix();
