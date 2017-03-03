@@ -194,21 +194,62 @@ void drawLeg() {
 }
 
 void drawTorso() {
-	glRotatef((GLfloat)leg1Y, 1.0f, 0.0f, 0.0f);
+	glRotatef((GLfloat)leg1Y, 0.0f, 1.0f, 0.0f);
+	//Drawing the body of the frog:-
 	glPushMatrix();
-	glTranslatef(1.0f, 0.0f, 0.0f);
-	glBindTexture(GL_TEXTURE_2D, eyeTextureId);
-	glRotatef((GLfloat)-90, 1.0f, 0.0f, 0.0f);
-	gluSphere(quad, 1.0f, 30, 30);
-	glBindTexture(GL_TEXTURE_2D, textureId);
-	glPopMatrix();
-	glPushMatrix();
-		//drawing the body:-
-		glScalef(2.0f, 1.0f, 1.0f);
+		glScalef(3.0f, 1.5f, 2.0f);
 		glRotatef((GLfloat)180, 1.0f, 0.0f, 0.0f);
 		glRotatef((GLfloat)90, 0.0f, 1.0f, 0.0f);
-		gluSphere(quad, 1.0f, 10, 30);
+		gluSphere(quad, 1.0f, 30, 30);
 	glPopMatrix();
+
+	//Drawing the Head of the frog:-
+	glPushMatrix();
+		glTranslatef(3.5f, -0.5f, 0.0f);
+		glPushMatrix();
+			//Neck area
+			glTranslatef(-0.5f, 0.5f, 0.0f);
+			glRotatef((GLfloat)-90, 0.0f, 1.0f, 0.0f);
+			glScalef(1.0f, 0.5f, 1.0f);
+			gluCylinder(quad, 2.0f, 1.5f, 2.0f, 30, 30);
+			glPushMatrix();
+				glRotatef((GLfloat)180, 0.0f, 1.0f, 0.0f);
+				gluCylinder(quad, 2.0f, 0.0f, 1.0f, 30, 30);
+			glPopMatrix();
+		glPopMatrix();
+		glPushMatrix();
+			//Top of head
+			glTranslatef(0.0f, 0.5f, 0.0f);
+			glScalef(2.0f, 1.0f, 2.5f);
+			glRotatef((GLfloat)90, 0.0f, 1.0f, 0.0f);
+			gluSphere(quad, 1.0f, 3, 30);
+		glPopMatrix();
+		glPushMatrix();
+			//Mouth of frog
+			glScalef(2.0f, 0.5f, 2.0f);
+			glRotatef((GLfloat)90, 0.0f, 1.0f, 0.0f);
+			gluSphere(quad, 1.0f, 30, 30);
+		glPopMatrix();
+		glPushMatrix();
+			//Eye Sockets
+			glTranslatef(0.5f, 1.0f, -1.0f);
+			gluCylinder(quad, 0.4f, 0.4f, 2.0f, 20, 20);
+		glPopMatrix();
+		//Eyes of frog:-
+		glBindTexture(GL_TEXTURE_2D, eyeTextureId);
+		glPushMatrix();
+			glTranslatef(0.5f, 1.0f, 1.0f);
+			glRotatef((GLfloat)-90, 1.0f, 0.0f, 0.0f);
+			gluSphere(quad, 0.4f, 10, 10);
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(0.5f, 1.0f, -1.0f);
+			glRotatef((GLfloat)90, 1.0f, 0.0f, 0.0f);
+			gluSphere(quad, 0.4f, 10, 10);
+		glPopMatrix();
+		glBindTexture(GL_TEXTURE_2D, textureId);
+	glPopMatrix();
+	
 
 
 }
@@ -433,7 +474,7 @@ int main(int argc, char** argv) {
 	//initializing the light sources and enabling the hidden surface removal
 	init();
 
-	cout << "Press b for rotation about vertical.\nKey prompts for joints:z,x,c,n" << endl;
+	cout << "Press b for rotation about vertical" << endl;
 	// enter GLUT event processing cycle
 	glutMainLoop();//enter the event loop
 
