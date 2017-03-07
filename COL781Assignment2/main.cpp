@@ -3,12 +3,15 @@
 #include <iostream>
 #include <vector>
 #include <soil.h>
+#include <fstream>
+#include <sstream>
+#include <string>
 
 using namespace std;
 
 //MACROS
 #define START_FRAME 0
-#define END_FRAME 30
+int END_FRAME = 0;//Changed we will dynamically decide how many frames to take
 #define epsilon 0.001
 #define FPS 30.0f
 #define TOTAL_FRAMES 10.0f
@@ -17,6 +20,15 @@ using namespace std;
 //structure for parameters of the different joints
 struct model_parameters {
 	float hand_rotation;
+	float elbow_rotation;
+	float shoulderZ_rotation;
+	float foot_rotation;
+	float leg3_rotation;
+	float leg2_rotation;
+	float leg1Y_rotation;
+	float leg1Z_rotation;
+	float translateX;
+	float translateY;
 };
 
 vector<model_parameters> keyFrames;
@@ -34,7 +46,10 @@ static int leg1X = 90;//constant during jump
 static int leg1Y = -55;
 static int leg1Z = -10;
 
+//torso parameters
 static int torso = 0;//for rotation of torso
+static float posX = 0;//Translate
+static float posY = 0;
 
 //global variables
 int startTime;
@@ -50,6 +65,7 @@ GLUquadric *quad; //quadric object to handle textute coordinates for glu primiti
 void animate();
 void fillKeyFrames();
 float lerp(float x, float y, float t);
+void readKeyFrames();
 
 //for loading skin and eye textures from image files
 void loadTexture() {
@@ -258,8 +274,10 @@ void drawTorso() {
 
 //To draw the entire frog model:-
 void drawModel() {
-	glScalef(0.5f, 0.5f, 0.5f);
-
+	glScalef(0.15f, 0.15f, 0.15f);
+	//translate
+	glTranslatef((GLfloat)posX,(GLfloat)posY,0.0f);
+	//
 	glRotatef((GLfloat)torso, 0.0f, 1.0f, 0.0f);
 	glPushMatrix();
 		glPushMatrix();
@@ -428,7 +446,10 @@ void keyboard(unsigned char key, int x, int y)
 	case 32://Space bar
 		//Animation
 		currentFrame = START_FRAME;
-		fillKeyFrames();//initialize the keyFrames vector
+		END_FRAME--;
+		//fillKeyFrames();//initialize the keyFrames vector
+		readKeyFrames();
+		startTime = glutGet(GLUT_ELAPSED_TIME);
 		glutIdleFunc(animate);//register idle callback
 		break;
 	case 'z':
@@ -461,7 +482,7 @@ void keyboard(unsigned char key, int x, int y)
 		cout << "leg2: " << leg2 << endl;
 		glutPostRedisplay();
 		break;
-	case 'v':
+	/*case 'v':
 		leg1X = (leg1X + 5) % 360;
 		cout << "leg1X: " << leg1X << endl;
 		glutPostRedisplay();
@@ -470,7 +491,7 @@ void keyboard(unsigned char key, int x, int y)
 		leg1X = (leg1X - 5) % 360;
 		cout << "leg1X: " << leg1X << endl;
 		glutPostRedisplay();
-		break;
+		break;*/
 	case 'b':
 		leg1Y = (leg1Y + 5) % 360;
 		cout << "leg1Y: " << leg1Y << endl;
@@ -498,6 +519,59 @@ void keyboard(unsigned char key, int x, int y)
 	case 'T':
 		torso = (torso - 5) % 360;
 		glutPostRedisplay();
+		break;
+	case 'j' :
+		posX += 0.1f;
+		glutPostRedisplay();
+		break;
+	case 'J':
+		posX -= 0.1f;
+		glutPostRedisplay();
+		break;
+	case 'k':
+		posY += 0.1f;
+		glutPostRedisplay();
+		break;
+	case 'K':
+		posY -= 0.1f;
+		glutPostRedisplay();
+		break;
+	case 'l'://Capture the current frame into the keyFrames
+		keyFrames.push_back(model_parameters());
+		keyFrames[END_FRAME].hand_rotation = hand;
+		keyFrames[END_FRAME].elbow_rotation = elbow;
+		keyFrames[END_FRAME].shoulderZ_rotation = shoulderZ;
+		keyFrames[END_FRAME].foot_rotation = foot;
+		keyFrames[END_FRAME].leg1Y_rotation = leg1Y;
+		keyFrames[END_FRAME].leg1Z_rotation = leg1Z;
+		keyFrames[END_FRAME].leg2_rotation = leg2;
+		keyFrames[END_FRAME].leg3_rotation = leg3;
+		keyFrames[END_FRAME].translateX = posX;
+		keyFrames[END_FRAME].translateY = posY;
+		END_FRAME++;//Increment the end frame number.
+		break;
+	case 'p'://save the parameters in a text file (space separated)
+	{
+		ofstream myfile("parameters.txt");
+		if (myfile.is_open())
+		{
+			myfile << END_FRAME << endl;
+			for (int i = 0; i < END_FRAME; i++) {
+				myfile << keyFrames[i].hand_rotation << " "
+					<< keyFrames[i].elbow_rotation << " "
+					<< keyFrames[i].shoulderZ_rotation << " "
+					<< keyFrames[i].foot_rotation << " "
+					<< keyFrames[i].leg1Y_rotation << " "
+					<< keyFrames[i].leg1Z_rotation << " "
+					<< keyFrames[i].leg2_rotation << " "
+					<< keyFrames[i].leg3_rotation << " "
+					<< keyFrames[i].translateX << " "
+					<< keyFrames[i].translateY << endl;
+			}
+		}
+		else cout << "Unable to open file";
+		myfile.close();
+	}
 		break;
 	case 27://ASCII code for Escape Key
 		exit(0);
@@ -539,8 +613,19 @@ void animate() {
 	elapsedTime = glutGet(GLUT_ELAPSED_TIME);
 	t_interpolation = ((elapsedTime - startTime)*(FPS))/(1000.0f * TOTAL_FRAMES);
 	int next_frame = currentFrame + 1;
-	
+	//Interpolate all the parameters of the model
 	hand = lerp(keyFrames[currentFrame].hand_rotation, keyFrames[next_frame].hand_rotation,t_interpolation);
+	elbow = lerp(keyFrames[currentFrame].elbow_rotation, keyFrames[next_frame].elbow_rotation, t_interpolation);
+	shoulderZ = lerp(keyFrames[currentFrame].shoulderZ_rotation, keyFrames[next_frame].shoulderZ_rotation, t_interpolation);
+	
+	foot = lerp(keyFrames[currentFrame].foot_rotation, keyFrames[next_frame].foot_rotation, t_interpolation);
+	leg1Y = lerp(keyFrames[currentFrame].leg1Y_rotation, keyFrames[next_frame].leg1Y_rotation, t_interpolation);
+	leg1Z = lerp(keyFrames[currentFrame].leg1Z_rotation, keyFrames[next_frame].leg1Z_rotation, t_interpolation);
+	leg2 = lerp(keyFrames[currentFrame].leg2_rotation, keyFrames[next_frame].leg2_rotation, t_interpolation);
+	leg3 = lerp(keyFrames[currentFrame].leg3_rotation, keyFrames[next_frame].leg3_rotation, t_interpolation);
+	
+	posX = lerp(keyFrames[currentFrame].translateX, keyFrames[next_frame].translateX, t_interpolation);
+	posY = lerp(keyFrames[currentFrame].translateY, keyFrames[next_frame].translateY, t_interpolation);
 	
 	glutPostRedisplay();
 	
@@ -560,6 +645,39 @@ void fillKeyFrames() {
 		keyFrames.push_back(model_parameters());
 		keyFrames[i].hand_rotation = keyFrames[i-1].hand_rotation - 3.0f;
 	}
+}
+
+void readKeyFrames() {
+	ifstream infile;
+	infile.open("parameters.txt");
+	keyFrames.clear();
+
+	std::string line;
+	//read number of key frames
+	getline(infile, line);
+	istringstream iss(line);
+	iss >> END_FRAME;
+	END_FRAME--;
+	for(int i = 0; i <= END_FRAME; i++)
+	{
+		getline(infile,line);
+		istringstream iss(line);
+		keyFrames.push_back(model_parameters());
+		
+		iss >> keyFrames[i].hand_rotation
+			>> keyFrames[i].elbow_rotation
+			>> keyFrames[i].shoulderZ_rotation
+			>> keyFrames[i].foot_rotation
+			>> keyFrames[i].leg1Y_rotation
+			>> keyFrames[i].leg1Z_rotation
+			>> keyFrames[i].leg2_rotation
+			>> keyFrames[i].leg3_rotation
+			>> keyFrames[i].translateX
+			>> keyFrames[i].translateY;
+	}
+
+
+	infile.close();
 }
 
 float lerp(float x, float y, float t) {
