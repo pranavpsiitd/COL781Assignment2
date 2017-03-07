@@ -23,16 +23,16 @@ vector<model_parameters> keyFrames;
 
 //parameters for rotation of arm
 static int hand = -85; //for rotation w.r.t. the hand joint
-static int elbow = -85;//for rotation w.r.t. the elbow joint  
-static int shoulderZ = -20;//this should be rotation angle around z-axis
+static int elbow = -45;//for rotation w.r.t. the elbow joint  
+static int shoulderZ = -40;//this should be rotation angle around z-axis
 
 //parameters for rotation of leg
-static int foot = 65;
-static int leg3 = 90;
-static int leg2 = -135;
+static int foot = 55;
+static int leg3 = 100;
+static int leg2 = -145;
 static int leg1X = 90;//constant during jump
-static int leg1Y = -60;
-static int leg1Z = -20;
+static int leg1Y = -55;
+static int leg1Z = -10;
 
 static int torso = 0;//for rotation of torso
 
@@ -197,7 +197,6 @@ void drawLeg(int leg1Y) {
 }
 
 void drawTorso() {
-	glRotatef((GLfloat)torso, 0.0f, 1.0f, 0.0f);
 	//Drawing the body of the frog:-
 	glPushMatrix();
 		glScalef(3.0f, 1.5f, 2.0f);
@@ -260,24 +259,31 @@ void drawTorso() {
 //To draw the entire frog model:-
 void drawModel() {
 	glScalef(0.5f, 0.5f, 0.5f);
-	drawTorso();
+
+	glRotatef((GLfloat)torso, 0.0f, 1.0f, 0.0f);
 	glPushMatrix();
-		glTranslatef(1.5f, -0.5f, 1.4f);
-		drawArm(90,-90,hand);
-	glPopMatrix();
-	glPushMatrix();
-		glTranslatef(1.5f, -0.5f, -1.4f);
-		drawArm(90, 90,-hand);
-	glPopMatrix();
-	glPushMatrix();
-		glTranslatef(-2.3f, 0.0f, 0.75f);
-		glScalef(0.4f, 0.4f, 0.4f);
-		drawLeg(leg1Y);
-	glPopMatrix();
-	glPushMatrix();
-		glTranslatef(-2.3f, 0.0f, -0.75f);
-		glScalef(0.4f, 0.4f, 0.4f);
-		drawLeg(-leg1Y);
+		glPushMatrix();
+			glRotatef((GLfloat)20, 0.0f, 0.0f, 1.0f);
+			drawTorso();
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(1.5f, 0.0f, 1.4f);
+			drawArm(90,-90,hand);
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(1.5f, 0.0f, -1.4f);
+			drawArm(90, 90,-hand);
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(-2.0f, -0.5f, 1.0f);
+			glScalef(0.4f, 0.4f, 0.4f);
+			drawLeg(leg1Y);
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(-2.0f, -0.5f, -1.0f);
+			glScalef(0.4f, 0.4f, 0.4f);
+			drawLeg(-leg1Y);
+		glPopMatrix();
 	glPopMatrix();
 }
 
