@@ -51,6 +51,10 @@ static int torso = 0;//for rotation of torso
 static float posX = 0;//Translate
 static float posY = 0;
 
+//multiple jumps
+static float posX_initial = 0;
+static int multipleJumps = 0;
+
 //global variables
 int startTime;
 int elapsedTime;
@@ -274,10 +278,10 @@ void drawTorso() {
 
 //To draw the entire frog model:-
 void drawModel() {
-	glTranslatef(-1.0f, 0.0f, 0.0f);
+	glTranslatef(-4.0f, 0.0f, 0.0f);
 	glScalef(0.15f, 0.15f, 0.15f);
 	//translate
-	glTranslatef((GLfloat)posX,(GLfloat)posY,0.0f);
+	glTranslatef((GLfloat)(posX + posX_initial),(GLfloat)posY,0.0f);
 	//
 	glRotatef((GLfloat)torso, 0.0f, 1.0f, 0.0f);
 	glPushMatrix();
@@ -452,6 +456,7 @@ void keyboard(unsigned char key, int x, int y)
 		readKeyFrames();
 		startTime = glutGet(GLUT_ELAPSED_TIME);
 		TOTAL_FRAMES = 10.0f;
+		posX_initial = multipleJumps*25.0f;
 		glutIdleFunc(animate);//register idle callback
 		break;
 	case 'z':
@@ -633,8 +638,10 @@ void animate() {
 	
 	if (t_interpolation > 1.0f - epsilon) {
 		currentFrame++;
-		if (currentFrame == END_FRAME - 1)
+		if (currentFrame == END_FRAME - 1) {
 			glutIdleFunc(NULL);
+			multipleJumps++;
+		}
 		else if (currentFrame == 7)
 			TOTAL_FRAMES = 4.0f;
 		startTime = glutGet(GLUT_ELAPSED_TIME);
