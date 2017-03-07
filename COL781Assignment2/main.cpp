@@ -446,7 +446,7 @@ void keyboard(unsigned char key, int x, int y)
 	case 32://Space bar
 		//Animation
 		currentFrame = START_FRAME;
-		END_FRAME--;
+		//END_FRAME--;
 		//fillKeyFrames();//initialize the keyFrames vector
 		readKeyFrames();
 		startTime = glutGet(GLUT_ELAPSED_TIME);
@@ -631,7 +631,7 @@ void animate() {
 	
 	if (t_interpolation > 1.0f - epsilon) {
 		currentFrame++;
-		if (currentFrame == END_FRAME)
+		if (currentFrame == END_FRAME - 1)
 			glutIdleFunc(NULL);
 		startTime = glutGet(GLUT_ELAPSED_TIME);
 	}
@@ -657,8 +657,8 @@ void readKeyFrames() {
 	getline(infile, line);
 	istringstream iss(line);
 	iss >> END_FRAME;
-	END_FRAME--;
-	for(int i = 0; i <= END_FRAME; i++)
+	//END_FRAME--;
+	for(int i = 0; i < END_FRAME; i++)
 	{
 		getline(infile,line);
 		istringstream iss(line);
