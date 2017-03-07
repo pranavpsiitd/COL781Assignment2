@@ -13,8 +13,8 @@ using namespace std;
 #define START_FRAME 0
 int END_FRAME = 0;//Changed we will dynamically decide how many frames to take
 #define epsilon 0.001
-#define FPS 30.0f
-#define TOTAL_FRAMES 10.0f
+int FPS = 30.0f;
+int TOTAL_FRAMES = 10.0f;
 //Total frames to be displayed in the linear interpolation performed during the interval between consecutive key-frames
 
 //structure for parameters of the different joints
@@ -274,6 +274,7 @@ void drawTorso() {
 
 //To draw the entire frog model:-
 void drawModel() {
+	glTranslatef(-1.0f, 0.0f, 0.0f);
 	glScalef(0.15f, 0.15f, 0.15f);
 	//translate
 	glTranslatef((GLfloat)posX,(GLfloat)posY,0.0f);
@@ -450,6 +451,7 @@ void keyboard(unsigned char key, int x, int y)
 		//fillKeyFrames();//initialize the keyFrames vector
 		readKeyFrames();
 		startTime = glutGet(GLUT_ELAPSED_TIME);
+		TOTAL_FRAMES = 10.0f;
 		glutIdleFunc(animate);//register idle callback
 		break;
 	case 'z':
@@ -633,6 +635,8 @@ void animate() {
 		currentFrame++;
 		if (currentFrame == END_FRAME - 1)
 			glutIdleFunc(NULL);
+		else if (currentFrame == 7)
+			TOTAL_FRAMES = 4.0f;
 		startTime = glutGet(GLUT_ELAPSED_TIME);
 	}
 }
