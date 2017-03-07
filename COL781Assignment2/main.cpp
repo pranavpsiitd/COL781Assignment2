@@ -27,12 +27,14 @@ static int elbow = -85;//for rotation w.r.t. the elbow joint
 static int shoulderZ = -20;//this should be rotation angle around z-axis
 
 //parameters for rotation of leg
-static int foot = 60;
+static int foot = 65;
 static int leg3 = 90;
-static int leg2 = -130;
+static int leg2 = -135;
 static int leg1X = 90;//constant during jump
-static int leg1Y = 0;//constant during jump
+static int leg1Y = -60;
 static int leg1Z = -20;
+
+static int torso = 0;//for rotation of torso
 
 //global variables
 int startTime;
@@ -171,7 +173,7 @@ void drawLeg3() {
 	glPopMatrix();
 }
 
-void drawLeg() {
+void drawLeg(int leg1Y) {
 	glRotatef((GLfloat)leg1Y, 0.0f, 1.0f, 0.0f);
 	glRotatef((GLfloat)leg1Z, 0.0f, 0.0f, 1.0f);
 	glRotatef((GLfloat)leg1X, 1.0f, 0.0f, 0.0f);
@@ -195,7 +197,7 @@ void drawLeg() {
 }
 
 void drawTorso() {
-	glRotatef((GLfloat)leg1Y, 0.0f, 1.0f, 0.0f);
+	glRotatef((GLfloat)torso, 0.0f, 1.0f, 0.0f);
 	//Drawing the body of the frog:-
 	glPushMatrix();
 		glScalef(3.0f, 1.5f, 2.0f);
@@ -267,7 +269,16 @@ void drawModel() {
 		glTranslatef(1.5f, -0.5f, -1.4f);
 		drawArm(90, 90,-hand);
 	glPopMatrix();
-
+	glPushMatrix();
+		glTranslatef(-2.3f, 0.0f, 0.75f);
+		glScalef(0.4f, 0.4f, 0.4f);
+		drawLeg(leg1Y);
+	glPopMatrix();
+	glPushMatrix();
+		glTranslatef(-2.3f, 0.0f, -0.75f);
+		glScalef(0.4f, 0.4f, 0.4f);
+		drawLeg(-leg1Y);
+	glPopMatrix();
 }
 
 void display() {
@@ -414,7 +425,7 @@ void keyboard(unsigned char key, int x, int y)
 		fillKeyFrames();//initialize the keyFrames vector
 		glutIdleFunc(animate);//register idle callback
 		break;
-	/*case 'z':
+	case 'z':
 		foot = (foot + 5) % 360;
 		cout << "foot: " << foot << endl;
 		glutPostRedisplay();
@@ -453,7 +464,7 @@ void keyboard(unsigned char key, int x, int y)
 		leg1X = (leg1X - 5) % 360;
 		cout << "leg1X: " << leg1X << endl;
 		glutPostRedisplay();
-		break;*/
+		break;
 	case 'b':
 		leg1Y = (leg1Y + 5) % 360;
 		cout << "leg1Y: " << leg1Y << endl;
@@ -464,7 +475,7 @@ void keyboard(unsigned char key, int x, int y)
 		cout << "leg1Y: " << leg1Y << endl;
 		glutPostRedisplay();
 		break;
-	/*case 'n':
+	case 'n':
 		leg1Z = (leg1Z + 5) % 360;
 		cout << "leg1Z: " << leg1Z << endl;
 		glutPostRedisplay();
@@ -473,7 +484,15 @@ void keyboard(unsigned char key, int x, int y)
 		leg1Z = (leg1Z - 5) % 360;
 		cout << "leg1Z: " << leg1Z << endl;
 		glutPostRedisplay();
-		break;*/
+		break;
+	case 't':
+		torso = (torso+ 5) % 360;
+		glutPostRedisplay();
+		break;
+	case 'T':
+		torso = (torso - 5) % 360;
+		glutPostRedisplay();
+		break;
 	case 27://ASCII code for Escape Key
 		exit(0);
 		break;
