@@ -13,7 +13,7 @@ using namespace std;
 #define START_FRAME 0
 int END_FRAME = 0;//Changed we will dynamically decide how many frames to take
 #define epsilon 0.001
-int FPS = 30.0f;
+int FPS = 60.0f;
 int TOTAL_FRAMES = 10.0f;
 //Total frames to be displayed in the linear interpolation performed during the interval between consecutive key-frames
 
@@ -52,8 +52,9 @@ static float posX = 0;//Translate
 static float posY = 0;
 
 //multiple jumps
-static float posX_initial = 0;
-static int multipleJumps = 0;
+static float posX_initial = -25.0f;
+//static int multipleJumps = 0;
+bool increasePosX = false;
 
 //global variables
 int startTime;
@@ -61,15 +62,178 @@ int elapsedTime;
 int currentFrame;
 float t_interpolation;
 
+
 GLuint textureId; //The id of the skin texture
 GLuint eyeTextureId; //The id of eye texture
 GLUquadric *quad; //quadric object to handle textute coordinates for glu primitives
+
+//camera and movement parameters:-
+GLint windowWidth = 1280;                    // Width of our window
+GLint windowHeight = 720;                    // Height of our window
+GLint midWindowX = windowWidth / 2;         // Middle of the window horizontally
+GLint midWindowY = windowHeight / 2;         // Middle of the window vertically
+
+// Camera rotation
+GLfloat camYRot = 0.0f;
+
+// Camera position
+GLfloat camXPos = 0.0f;
+GLfloat camZPos = 5.0f;
+
+// Camera movement speed
+GLfloat camXSpeed = 0.0f;
+GLfloat camZSpeed = 0.0f;
+GLfloat movementSpeedFactor = 0.2f;// How fast we move (higher values mean we move and strafe faster)
+
+// Hoding any keys down?
+bool holdingForward = false;
+bool holdingBackward = false;
+bool holdingLeftStrafe = false;
+bool holdingRightStrafe = false;
+//cursor position:-
+int xpos, ypos;
+
+
 
 //function declarations
 void animate();
 void fillKeyFrames();
 float lerp(float x, float y, float t);
 void readKeyFrames();
+
+// Function to convert degrees to radians
+float toRads(const float &theAngleInDegrees)
+{
+	return theAngleInDegrees * 3.141592654f / 180.0f;
+}
+
+// Function to move the camera the amount we've calculated in the calculateCameraMovement function
+void moveCamera()
+{
+	camXPos += camXSpeed;
+	camZPos += camZSpeed;
+}
+
+void update(int x, int y) {
+	xpos = x;
+	ypos = y;
+}
+
+// Function to deal with mouse position changes, called whenever the mouse cursor moves
+void handleMouseMove()
+{
+	GLfloat mouseSensitivity = 10.0f;
+	int movement = xpos - midWindowX;
+	camYRot += movement / mouseSensitivity;
+	// Looking left and right. Keep the angles in the range -180.0f (anticlockwise turn looking behind) to 180.0f (clockwise turn looking behind)
+	if (camYRot < -180.0f)
+		camYRot += 360.0f;
+	if (camYRot > 180.0f)
+		camYRot -= 360.0f;
+	// Reset the mouse position to the centre of the window each frame
+	glutWarpPointer(midWindowX, midWindowY);
+}
+
+// Function to calculate which direction we need to move the camera and by what amount
+void calculateCameraMovement()
+{
+	// Break up our movement into components along the X, Y and Z axis
+	float camMovementXComponent = 0.0f;
+	float camMovementZComponent = 0.0f;
+
+	if (holdingForward){
+		camMovementXComponent += (movementSpeedFactor * float(sin(toRads(camYRot))));
+		camMovementZComponent -= (movementSpeedFactor * float(cos(toRads(camYRot))));
+	}
+	if (holdingBackward){
+		camMovementXComponent -= (movementSpeedFactor * float(sin(toRads(camYRot))));
+		camMovementZComponent += (movementSpeedFactor * float(cos(toRads(camYRot))));
+	}
+	if (holdingLeftStrafe){
+		float yRotRad = toRads(camYRot);
+		camMovementXComponent += -movementSpeedFactor * float(cos(yRotRad));
+		camMovementZComponent += -movementSpeedFactor * float(sin(yRotRad));
+	}
+	if (holdingRightStrafe){
+		float yRotRad = toRads(camYRot);
+		camMovementXComponent += movementSpeedFactor * float(cos(yRotRad));
+		camMovementZComponent += movementSpeedFactor * float(sin(yRotRad));
+	}
+
+	camXSpeed = camMovementXComponent;
+	camZSpeed = camMovementZComponent;
+
+	// Cap the speeds to our movementSpeedFactor:-
+	if (camXSpeed > movementSpeedFactor)
+		camXSpeed = movementSpeedFactor;
+	if (camXSpeed < -movementSpeedFactor)
+		camXSpeed = -movementSpeedFactor;
+	if (camZSpeed > movementSpeedFactor)
+		camZSpeed = movementSpeedFactor;
+	if (camZSpeed < -movementSpeedFactor)
+		camZSpeed = -movementSpeedFactor;
+}
+
+// Function to set flags according to which keys are pressed or released
+void handleKeypressUp(unsigned char theKey, int x, int y)
+{
+		switch (theKey)
+		{
+		case 'w':
+		case 'W':
+			holdingForward = false;
+			break;
+		case 's':
+		case 'S':
+			holdingBackward = false;
+			break;
+		case 'a':
+		case 'A':
+			holdingLeftStrafe = false;
+			break;
+		case 'd':
+		case 'D':
+			holdingRightStrafe = false;
+			break;
+		case 32://Space bar
+				//Animation
+			currentFrame = START_FRAME;
+			//END_FRAME--;
+			//fillKeyFrames();//initialize the keyFrames vector
+			readKeyFrames();
+			startTime = glutGet(GLUT_ELAPSED_TIME);
+			TOTAL_FRAMES = 10.0f;
+			increasePosX = true;
+			glutIdleFunc(animate);//register idle callback
+			break;
+		default:
+			break;
+		}
+}
+
+void handleKeypress(unsigned char theKey, int x, int y) {
+	switch (theKey)
+	{
+	case 'w':
+	case 'W':
+		holdingForward = true;
+		break;
+	case 's':
+	case 'S':
+		holdingBackward = true;
+		break;
+	case 'a':
+	case 'A':
+		holdingLeftStrafe = true;
+		break;
+	case 'd':
+	case 'D':
+		holdingRightStrafe = true;
+		break;
+	default:
+		break;
+	}
+}
 
 //for loading skin and eye textures from image files
 void loadTexture() {
@@ -311,6 +475,9 @@ void drawModel() {
 }
 
 void display() {
+	handleMouseMove();
+	calculateCameraMovement();
+	moveCamera();
 	//clear the current buffer (back buffer)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -335,8 +502,9 @@ void display() {
 
 	gluQuadricTexture(quad, 1);	//initializing the quadric object
 
-							   
-	//drawing the model
+	glLoadIdentity();
+	gluLookAt(camXPos,1.0f,camZPos,camXPos+sin(toRads(camYRot)),1.0f,camZPos-cos(toRads(camYRot)),0.0f,1.0f,0.0f);
+	//cout << camXPos << " " << camZPos << " " << camXPos + sin(toRads(camYRot)) << " " << camZPos - cos(toRads(camYRot)) << endl;	//drawing the model
 	glPushMatrix();//duplicate the top of the stack
 	drawModel();
 	glPopMatrix();//remove the top of stack
@@ -356,11 +524,11 @@ void reshape(GLint w, GLint h) {
 	glLoadIdentity();
 	if (w <= h) {
 		// width is smaller, so stretch out the height
-		glOrtho(-2.5, 2.5, -2.5 / aspect, 2.5 / aspect, -10.0, 10.0);
+		gluPerspective(45.0 / 2.0f, h/ w, 1.0, 1500.0f);
 	}
 	else {
 		// height is smaller, so stretch out the width
-		glOrtho(-2.5*aspect, 2.5*aspect, -2.5, 2.5, -10.0, 10.0);
+		gluPerspective(45.0 / 2.0f, w / h, 1.0, 1500.0f);
 	}
 }
 
@@ -371,6 +539,9 @@ void reshape(GLint w, GLint h) {
 // to make cyan colored objects with a fairly low shininess value.  Lighting
 // and depth buffer hidden surface removal are enabled here.
 void init() {
+
+	glutSetCursor(GLUT_CURSOR_NONE);//hide mouse cursor
+	glutWarpPointer(midWindowX, midWindowY);
 	GLfloat black[] = { 0.0, 0.0, 0.0, 1.0 };
 	GLfloat yellow[] = { 1.0, 1.0, 0.0, 1.0 };
 	GLfloat gray[] = { 0.5, .5, 0.5, 1.0 };
@@ -408,26 +579,6 @@ void keyboard(unsigned char key, int x, int y)
 		cout << shoulderZ << endl;
 		glutPostRedisplay();
 		break;
-	/*case 'a':
-		shoulderX = (shoulderX + 5) % 360;
-		cout << shoulderX << endl;
-		glutPostRedisplay();
-		break;
-	case 'A':
-		shoulderX = (shoulderX - 5) % 360;
-		cout << shoulderX << endl;
-		glutPostRedisplay();
-		break;
-	case 's':
-		shoulderY = (shoulderY + 5) % 360;
-		cout << shoulderY << endl;
-		glutPostRedisplay();
-		break;
-	case 'S':
-		shoulderY = (shoulderY - 5) % 360;
-		cout << shoulderY << endl;
-		glutPostRedisplay();
-		break;*/
 	case 'e':
 		elbow = (elbow + 5) % 360;
 		cout << elbow << endl;
@@ -456,7 +607,7 @@ void keyboard(unsigned char key, int x, int y)
 		readKeyFrames();
 		startTime = glutGet(GLUT_ELAPSED_TIME);
 		TOTAL_FRAMES = 10.0f;
-		posX_initial = multipleJumps*25.0f;
+		//posX_initial = multipleJumps*25.0f;
 		glutIdleFunc(animate);//register idle callback
 		break;
 	case 'z':
@@ -489,16 +640,6 @@ void keyboard(unsigned char key, int x, int y)
 		cout << "leg2: " << leg2 << endl;
 		glutPostRedisplay();
 		break;
-	/*case 'v':
-		leg1X = (leg1X + 5) % 360;
-		cout << "leg1X: " << leg1X << endl;
-		glutPostRedisplay();
-		break;
-	case 'V':
-		leg1X = (leg1X - 5) % 360;
-		cout << "leg1X: " << leg1X << endl;
-		glutPostRedisplay();
-		break;*/
 	case 'b':
 		leg1Y = (leg1Y + 5) % 360;
 		cout << "leg1Y: " << leg1Y << endl;
@@ -597,26 +738,32 @@ int main(int argc, char** argv) {
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 
 	glutInitWindowPosition(40, 20);// First we establish the window’s position, i.e. its top left corner.
-	glutInitWindowSize(1280, 720);//prototype - void glutInitWindowSize(int width, int height)
+	glutInitWindowSize(windowWidth, windowHeight);//prototype - void glutInitWindowSize(int width, int height)
 	//create Window
 	glutCreateWindow("Frog Jump");
 
 	//register callbacks
 	glutReshapeFunc(reshape);//register reshape callback function
 	glutDisplayFunc(display);//register display callback function
-	glutKeyboardUpFunc(keyboard);//register keyboard press callback function
+	glutKeyboardUpFunc(handleKeypressUp);//register keyboard press callback function
+	glutKeyboardFunc(handleKeypress);
 
 	//initializing the light sources and enabling the hidden surface removal
 	init();
 
 	cout << "Use q,e,h to move the joints" << endl;
 	// enter GLUT event processing cycle
+	glutPassiveMotionFunc(update);
 	glutMainLoop();//enter the event loop
 
 	return 0;//unreachable return statement :P
 }
 
 void animate() {
+	if (increasePosX) {
+		posX_initial += 25.0f;
+		increasePosX = false;
+	}
 	elapsedTime = glutGet(GLUT_ELAPSED_TIME);
 	t_interpolation = ((elapsedTime - startTime)*(FPS))/(1000.0f * TOTAL_FRAMES);
 	int next_frame = currentFrame + 1;
@@ -640,7 +787,16 @@ void animate() {
 		currentFrame++;
 		if (currentFrame == END_FRAME - 1) {
 			glutIdleFunc(NULL);
-			multipleJumps++;
+			increasePosX = true;
+			//added code
+			currentFrame = START_FRAME;
+			//END_FRAME--;
+			//fillKeyFrames();//initialize the keyFrames vector
+			readKeyFrames();
+			startTime = glutGet(GLUT_ELAPSED_TIME);
+			TOTAL_FRAMES = 10.0f;
+			glutIdleFunc(animate);//register idle callback
+			//end
 		}
 		else if (currentFrame == 7)
 			TOTAL_FRAMES = 4.0f;
