@@ -48,12 +48,15 @@ static int leg1Y = -55;
 static int leg1Z = -10;
 
 //torso parameters
-static int torso = 0;//for rotation of torso
+static float torso = 0;//for rotation of torso
 static float posX = 0;//Translate
 static float posY = 0;
 
 //multiple jumps
 static float posX_initial = -25.0f;
+static float posZ_initial = 0.0f;
+static float posX_abs = -25.0f;
+static float posZ_abs = 0.0f;
 //static int multipleJumps = 0;
 bool increasePosX = false;
 
@@ -197,6 +200,14 @@ void handleKeypressUp(unsigned char theKey, int x, int y)
 		case 'D':
 			holdingRightStrafe = false;
 			break;
+		/*case 't':
+			torso = (torso + 5) % 360;
+			glutPostRedisplay();
+			break;
+		case 'T':
+			torso = (torso - 5) % 360;
+			glutPostRedisplay();
+			break;*/
 		case 32://Space bar
 				//Animation
 			currentFrame = START_FRAME;
@@ -445,10 +456,12 @@ void drawTorso() {
 
 //To draw the entire frog model:-
 void drawModel() {
-	glTranslatef(-4.0f, 0.0f, 0.0f);
+	//glTranslatef(-4.0f, 0.0f, 0.0f);
 	glScalef(0.15f, 0.15f, 0.15f);
 	//translate
-	glTranslatef((GLfloat)(posX + posX_initial),(GLfloat)posY,0.0f);
+	posX_abs = posX*cos(toRads(torso)) + posX_initial;
+	posZ_abs = posZ_initial - posX*sin(toRads(torso));
+	glTranslatef((GLfloat)(posX_abs), (GLfloat)posY, (GLfloat)(posZ_abs));
 	//
 	glRotatef((GLfloat)torso, 0.0f, 1.0f, 0.0f);
 	glPushMatrix();
@@ -663,14 +676,14 @@ void keyboard(unsigned char key, int x, int y)
 		cout << "leg1Z: " << leg1Z << endl;
 		glutPostRedisplay();
 		break;
-	case 't':
+	/*case 't':
 		torso = (torso+ 5) % 360;
 		glutPostRedisplay();
 		break;
 	case 'T':
 		torso = (torso - 5) % 360;
 		glutPostRedisplay();
-		break;
+		break;*/
 	case 'j' :
 		posX += 0.1f;
 		glutPostRedisplay();
@@ -754,7 +767,7 @@ int main(int argc, char** argv) {
 	//initializing the light sources and enabling the hidden surface removal
 	init();
 
-	cout << "Use q,e,h to move the joints" << endl;
+	cout << "Press Space Bar to begin the Game!!" << endl;
 	// enter GLUT event processing cycle
 	glutPassiveMotionFunc(update);
 	glutMainLoop();//enter the event loop
@@ -764,7 +777,10 @@ int main(int argc, char** argv) {
 
 void animate() {
 	if (increasePosX) {
-		posX_initial += 25.0f;
+		posX_initial = posX_abs;
+		posZ_initial = posZ_abs;
+		torso = atan2(posZ_initial*0.15f - camZPos, camXPos - posX_initial*0.15f) * 180 / 3.14;
+		//cout << torso << " " << posZ_initial << " " << camZPos << endl;
 		increasePosX = false;
 	}
 	elapsedTime = glutGet(GLUT_ELAPSED_TIME);
