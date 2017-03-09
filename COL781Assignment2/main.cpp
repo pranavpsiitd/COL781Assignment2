@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <algorithm>
 
 using namespace std;
 
@@ -59,6 +60,7 @@ bool increasePosX = false;
 //global variables
 int startTime;
 int elapsedTime;
+int prevTime;
 int currentFrame;
 float t_interpolation;
 
@@ -201,6 +203,7 @@ void handleKeypressUp(unsigned char theKey, int x, int y)
 			//END_FRAME--;
 			//fillKeyFrames();//initialize the keyFrames vector
 			readKeyFrames();
+			prevTime = glutGet(GLUT_ELAPSED_TIME);
 			startTime = glutGet(GLUT_ELAPSED_TIME);
 			TOTAL_FRAMES = 10.0f;
 			increasePosX = true;
@@ -765,6 +768,10 @@ void animate() {
 		increasePosX = false;
 	}
 	elapsedTime = glutGet(GLUT_ELAPSED_TIME);
+	Sleep(max(0,17-(elapsedTime-prevTime)));
+	prevTime = elapsedTime;
+	elapsedTime = glutGet(GLUT_ELAPSED_TIME);
+
 	t_interpolation = ((elapsedTime - startTime)*(FPS))/(1000.0f * TOTAL_FRAMES);
 	int next_frame = currentFrame + 1;
 	//Interpolate all the parameters of the model
