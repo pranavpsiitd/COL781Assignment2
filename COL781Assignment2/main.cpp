@@ -315,7 +315,7 @@ void handleKeypressUp(unsigned char theKey, int x, int y)
 			//fillKeyFrames();//initialize the keyFrames vector
 			readKeyFrames(frog);
 			frog.startTime = glutGet(GLUT_ELAPSED_TIME);
-			frog.TOTAL_FRAMES = 10.0f;
+			//frog.TOTAL_FRAMES = 10.0f;
 		}
 		break;
 		case 32://Space bar start animation
@@ -930,14 +930,14 @@ void animate() {
 			frog.increasePosX = false;
 		}
 		frog.elapsedTime = glutGet(GLUT_ELAPSED_TIME);
-		Sleep(max(0, 17 - (frog.elapsedTime - frog.prevTime)));
+		//Sleep(max(0, 17 - (frog.elapsedTime - frog.prevTime)));
 		frog.prevTime = frog.elapsedTime;
 		frog.elapsedTime = glutGet(GLUT_ELAPSED_TIME);
 
 		frog.t_interpolation = ((frog.elapsedTime - frog.startTime)*(frog.FPS)) / (1000.0f * frog.TOTAL_FRAMES);
 		int currentFrame = frog.currentFrame;
 		int next_frame = currentFrame + 1;
-		int t_interpolation = frog.t_interpolation;
+		float t_interpolation = frog.t_interpolation;
 
 		vector<model_parameters>& keyFrames = frog.keyFrames;
 		//Interpolate all the parameters of the model
