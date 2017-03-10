@@ -11,12 +11,7 @@
 using namespace std;
 
 //MACROS
-#define START_FRAME 0
-int END_FRAME = 0;//Changed we will dynamically decide how many frames to take
 #define epsilon 0.001
-int FPS = 60.0f;
-int TOTAL_FRAMES = 10.0f;
-//Total frames to be displayed in the linear interpolation performed during the interval between consecutive key-frames
 
 //structure for parameters of the different joints
 struct model_parameters {
@@ -32,40 +27,94 @@ struct model_parameters {
 	float translateY;
 };
 
-vector<model_parameters> keyFrames;
+//Multiple Frogs
+int numFrogs = 0;
 
-//parameters for rotation of arm
-static int hand = -85; //for rotation w.r.t. the hand joint
-static int elbow = -45;//for rotation w.r.t. the elbow joint  
-static int shoulderZ = -40;//this should be rotation angle around z-axis
+struct frog {
+	int START_FRAME;
+	int END_FRAME;
+	int FPS;
+	int TOTAL_FRAMES;
 
-//parameters for rotation of leg
-static int foot = 55;
-static int leg3 = 100;
-static int leg2 = -145;
-static int leg1X = 90;//constant during jump
-static int leg1Y = -55;
-static int leg1Z = -10;
+	vector<model_parameters> keyFrames;
 
-//torso parameters
-static float torso = 0;//for rotation of torso
-static float posX = 0;//Translate
-static float posY = 0;
 
-//multiple jumps
-static float posX_initial = -25.0f;
-static float posZ_initial = 0.0f;
-static float posX_abs = -25.0f;
-static float posZ_abs = 0.0f;
-//static int multipleJumps = 0;
-bool increasePosX = false;
+	//parameters for rotation of arm
+	int hand;//for rotation w.r.t. the hand joint
+	int elbow;//for rotation w.r.t. the elbow joint  
+	int shoulderZ;//this should be rotation angle around z-axis
 
-//global variables
-int startTime;
-int elapsedTime;
-int prevTime;
-int currentFrame;
-float t_interpolation;
+	//parameters for rotation of leg
+	int foot;
+	int leg3;
+	int leg2;
+	int leg1X;//constant during jump
+	int leg1Y;
+	int leg1Z;
+
+	//torso parameters
+	float torso;//for rotation of torso
+	float posX;//Translate
+	float posY;
+
+	//multiple jumps
+	float posX_initial;
+	float posZ_initial;
+	float posX_abs;
+	float posZ_abs;
+	bool increasePosX;
+
+	//global variables
+	int startTime;
+	int elapsedTime;
+	int prevTime;
+	int currentFrame;
+	float t_interpolation;
+
+};
+
+vector<frog> frogs;
+
+//int START_FRAME = 0;
+//int END_FRAME = 0;//Changed we will dynamically decide how many frames to take
+//int FPS = 60.0f;
+//int TOTAL_FRAMES = 10.0f;
+//Total frames to be displayed in the linear interpolation performed during the interval between consecutive key-frames
+
+//vector<model_parameters> keyFrames;
+//
+////parameters for rotation of arm
+//static int hand = -85; //for rotation w.r.t. the hand joint
+//static int elbow = -45;//for rotation w.r.t. the elbow joint  
+//static int shoulderZ = -40;//this should be rotation angle around z-axis
+//
+////parameters for rotation of leg
+//static int foot = 55;
+//static int leg3 = 100;
+//static int leg2 = -145;
+//static int leg1X = 90;//constant during jump
+//static int leg1Y = -55;
+//static int leg1Z = -10;
+//
+////torso parameters
+//static float torso = 0;//for rotation of torso
+//static float posX = 0;//Translate
+//static float posY = 0;
+//
+////multiple jumps
+//static float posX_initial = -25.0f;
+//static float posZ_initial = 0.0f;
+//static float posX_abs = -25.0f;
+//static float posZ_abs = 0.0f;
+////static int multipleJumps = 0;
+//bool increasePosX = false;
+//
+////global variables
+//int startTime;
+//int elapsedTime;
+//int prevTime;
+//int currentFrame;
+//float t_interpolation;
 
 
 GLuint textureId; //The id of the skin texture
@@ -102,9 +151,9 @@ int xpos, ypos;
 
 //function declarations
 void animate();
-void fillKeyFrames();
+//void fillKeyFrames();
 float lerp(float x, float y, float t);
-void readKeyFrames();
+void readKeyFrames(frog& frog);
 
 // Function to convert degrees to radians
 float toRads(const float &theAngleInDegrees)
@@ -208,16 +257,68 @@ void handleKeypressUp(unsigned char theKey, int x, int y)
 			torso = (torso - 5) % 360;
 			glutPostRedisplay();
 			break;*/
-		case 32://Space bar
-				//Animation
-			currentFrame = START_FRAME;
+		//case 32://Space bar
+		//		//Animation
+		//	currentFrame = START_FRAME;
+		//	//END_FRAME--;
+		//	//fillKeyFrames();//initialize the keyFrames vector
+		//	readKeyFrames();
+		//	prevTime = glutGet(GLUT_ELAPSED_TIME);
+		//	startTime = glutGet(GLUT_ELAPSED_TIME);
+		//	TOTAL_FRAMES = 10.0f;
+		//	increasePosX = true;
+		//	glutIdleFunc(animate);//register idle callback
+		//	break;
+		case 'l':
+		{
+			frogs.push_back(frog());
+			numFrogs++;
+			frog& frog = frogs[numFrogs - 1];
+			//initialize frog
+			frog.START_FRAME = 0;
+			frog.END_FRAME = 0;//Changed we will dynamically decide how many frames to take
+			frog.FPS = 60.0f;
+			frog.TOTAL_FRAMES = 10.0f;
+			//Total frames to be displayed in the linear interpolation performed during the interval between consecutive key-frames
+
+			//vector<model_parameters> keyFrames;
+
+			//parameters for rotation of arm
+			frog.hand = -85; //for rotation w.r.t. the hand joint
+			frog.elbow = -45;//for rotation w.r.t. the elbow joint  
+			frog.shoulderZ = -40;//this should be rotation angle around z-axis
+
+								 //parameters for rotation of leg
+			frog.foot = 55;
+			frog.leg3 = 100;
+			frog.leg2 = -145;
+			frog.leg1X = 90;//constant during jump
+			frog.leg1Y = -55;
+			frog.leg1Z = -10;
+
+			//torso parameters
+			frog.torso = 0;//for rotation of torso
+			frog.posX = 0;//Translate
+			frog.posY = 0;
+
+			//multiple jumps
+			frog.posX_initial = -25.0f;
+			frog.posZ_initial = 0.0f;
+			frog.posX_abs = -25.0f;
+			frog.posZ_abs = 0.0f;
+			//static int multipleJumps = 0;
+			frog.increasePosX = false;
+			//initialization end
+
+			frog.currentFrame = frog.START_FRAME;
 			//END_FRAME--;
 			//fillKeyFrames();//initialize the keyFrames vector
-			readKeyFrames();
-			prevTime = glutGet(GLUT_ELAPSED_TIME);
-			startTime = glutGet(GLUT_ELAPSED_TIME);
-			TOTAL_FRAMES = 10.0f;
-			increasePosX = true;
+			readKeyFrames(frog);
+			frog.startTime = glutGet(GLUT_ELAPSED_TIME);
+			frog.TOTAL_FRAMES = 10.0f;
+		}
+		break;
+		case 32://Space bar start animation
 			glutIdleFunc(animate);//register idle callback
 			break;
 		default:
@@ -313,15 +414,15 @@ void drawArmPart() {
 	glPopMatrix();
 }
 
-void drawArm(int shoulderX,int shoulderY,int hand) {
+void drawArm(int shoulderX,int shoulderY,int hand,frog& frog) {
 	glRotatef((GLfloat)shoulderY, 0.0, 1.0, 0.0);
-	glRotatef((GLfloat)shoulderZ, 0.0, 0.0, 1.0);
+	glRotatef((GLfloat)frog.shoulderZ, 0.0, 0.0, 1.0);
 	glRotatef((GLfloat)shoulderX, 1.0, 0.0, 0.0);
 	glScalef(0.5f, 0.5f, 0.5f);
 	drawArmPart();//drawing the shoulder
 	glPushMatrix();
 		glTranslatef(3.0, 0.0, 0.0);
-		glRotatef((GLfloat)elbow, 0.0, 1.0, 0.0);
+		glRotatef((GLfloat)frog.elbow, 0.0, 1.0, 0.0);
 		drawArmPart();//drawing the elbow
 		glPushMatrix();
 			glTranslatef(3.5f, 0.0f, 0.0f);
@@ -371,22 +472,22 @@ void drawLeg3() {
 	glPopMatrix();
 }
 
-void drawLeg(int leg1Y) {
+void drawLeg(int leg1Y, frog& frog) {
 	glRotatef((GLfloat)leg1Y, 0.0f, 1.0f, 0.0f);
-	glRotatef((GLfloat)leg1Z, 0.0f, 0.0f, 1.0f);
-	glRotatef((GLfloat)leg1X, 1.0f, 0.0f, 0.0f);
+	glRotatef((GLfloat)frog.leg1Z, 0.0f, 0.0f, 1.0f);
+	glRotatef((GLfloat)frog.leg1X, 1.0f, 0.0f, 0.0f);
 	drawLeg1();
 	glPushMatrix();
 		glTranslatef(6.0f, 0.0f, 0.0f);
-		glRotatef((GLfloat)leg2, 0.0f, 1.0f, 0.0f);
+		glRotatef((GLfloat)frog.leg2, 0.0f, 1.0f, 0.0f);
 		drawLeg2();
 		glPushMatrix();
 			glTranslatef(6.0f, 0.0f, 0.0f);
-			glRotatef((GLfloat)leg3, 0.0f, 1.0f, 0.0f);
+			glRotatef((GLfloat)frog.leg3, 0.0f, 1.0f, 0.0f);
 			drawLeg3();
 			glPushMatrix();//drawing the foot
 				glTranslatef(3.0f, 0.0f, 0.0f);
-				glRotatef((GLfloat)foot, 0.0f, 1.0f, 0.0f);
+				glRotatef((GLfloat)frog.foot, 0.0f, 1.0f, 0.0f);
 				glScalef(2.0f, 0.75f, 1.0f);//foot is represented as an elongated hand
 				drawHand();
 			glPopMatrix();
@@ -455,15 +556,15 @@ void drawTorso() {
 }
 
 //To draw the entire frog model:-
-void drawModel() {
+void drawModel(frog& frog) {
 	//glTranslatef(-4.0f, 0.0f, 0.0f);
 	glScalef(0.15f, 0.15f, 0.15f);
 	//translate
-	posX_abs = posX*cos(toRads(torso)) + posX_initial;
-	posZ_abs = posZ_initial - posX*sin(toRads(torso));
-	glTranslatef((GLfloat)(posX_abs), (GLfloat)posY, (GLfloat)(posZ_abs));
+	frog.posX_abs = frog.posX*cos(toRads(frog.torso)) + frog.posX_initial;
+	frog.posZ_abs = frog.posZ_initial - frog.posX*sin(toRads(frog.torso));
+	glTranslatef((GLfloat)(frog.posX_abs), (GLfloat)frog.posY, (GLfloat)(frog.posZ_abs));
 	//
-	glRotatef((GLfloat)torso, 0.0f, 1.0f, 0.0f);
+	glRotatef((GLfloat)frog.torso, 0.0f, 1.0f, 0.0f);
 	glPushMatrix();
 		glPushMatrix();
 			glRotatef((GLfloat)20, 0.0f, 0.0f, 1.0f);
@@ -471,21 +572,21 @@ void drawModel() {
 		glPopMatrix();
 		glPushMatrix();
 			glTranslatef(1.5f, 0.0f, 1.4f);
-			drawArm(90,-90,hand);
+			drawArm(90,-90,frog.hand,frog);
 		glPopMatrix();
 		glPushMatrix();
 			glTranslatef(1.5f, 0.0f, -1.4f);
-			drawArm(90, 90,-hand);
+			drawArm(90, 90,-frog.hand,frog);
 		glPopMatrix();
 		glPushMatrix();
 			glTranslatef(-2.0f, -0.5f, 1.0f);
 			glScalef(0.4f, 0.4f, 0.4f);
-			drawLeg(leg1Y);
+			drawLeg(frog.leg1Y,frog);
 		glPopMatrix();
 		glPushMatrix();
 			glTranslatef(-2.0f, -0.5f, -1.0f);
 			glScalef(0.4f, 0.4f, 0.4f);
-			drawLeg(-leg1Y);
+			drawLeg(-frog.leg1Y,frog);
 		glPopMatrix();
 	glPopMatrix();
 }
@@ -521,9 +622,11 @@ void display() {
 	glLoadIdentity();
 	gluLookAt(camXPos,1.0f,camZPos,camXPos+sin(toRads(camYRot)),1.0f,camZPos-cos(toRads(camYRot)),0.0f,1.0f,0.0f);
 	//cout << camXPos << " " << camZPos << " " << camXPos + sin(toRads(camYRot)) << " " << camZPos - cos(toRads(camYRot)) << endl;	//drawing the model
-	glPushMatrix();//duplicate the top of the stack
-	drawModel();
-	glPopMatrix();//remove the top of stack
+	for (int i = 0; i < frogs.size(); i++) {
+		glPushMatrix();//duplicate the top of the stack
+		drawModel(frogs[i]);
+		glPopMatrix();//remove the top of stack
+	}
 	
 	//swap the front and back buffers.
 	glutSwapBuffers();
@@ -585,7 +688,7 @@ void init() {
 void keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
-	case 'q':
+	/*case 'q':
 		shoulderZ = (shoulderZ + 5) % 360;
 		cout << shoulderZ << endl;
 		glutPostRedisplay();
@@ -614,129 +717,170 @@ void keyboard(unsigned char key, int x, int y)
 		hand = (hand - 5) % 360;
 		cout << hand << endl;
 		glutPostRedisplay();
-		break;
-	case 32://Space bar
-		//Animation
-		currentFrame = START_FRAME;
+		break;*/
+	case 'l':
+	{
+		frogs.push_back(frog());
+		numFrogs++;
+		frog& frog = frogs[numFrogs - 1];
+		//initialize frog
+		frog.START_FRAME = 0;
+		frog.END_FRAME = 0;//Changed we will dynamically decide how many frames to take
+		frog.FPS = 60.0f;
+		frog.TOTAL_FRAMES = 10.0f;
+		//Total frames to be displayed in the linear interpolation performed during the interval between consecutive key-frames
+
+		//vector<model_parameters> keyFrames;
+
+		//parameters for rotation of arm
+		frog.hand = -85; //for rotation w.r.t. the hand joint
+		frog.elbow = -45;//for rotation w.r.t. the elbow joint  
+		frog.shoulderZ = -40;//this should be rotation angle around z-axis
+
+		//parameters for rotation of leg
+		frog.foot = 55;
+		frog.leg3 = 100;
+		frog.leg2 = -145;
+		frog.leg1X = 90;//constant during jump
+		frog.leg1Y = -55;
+		frog.leg1Z = -10;
+
+		//torso parameters
+		frog.torso = 0;//for rotation of torso
+		frog.posX = 0;//Translate
+		frog.posY = 0;
+
+		//multiple jumps
+		frog.posX_initial = -25.0f;
+		frog.posZ_initial = 0.0f;
+		frog.posX_abs = -25.0f;
+		frog.posZ_abs = 0.0f;
+		//static int multipleJumps = 0;
+		frog.increasePosX = false;
+		//initialization end
+
+		frog.currentFrame = frog.START_FRAME;
 		//END_FRAME--;
 		//fillKeyFrames();//initialize the keyFrames vector
-		readKeyFrames();
-		startTime = glutGet(GLUT_ELAPSED_TIME);
-		TOTAL_FRAMES = 10.0f;
-		//posX_initial = multipleJumps*25.0f;
-		glutIdleFunc(animate);//register idle callback
-		break;
-	case 'z':
-		foot = (foot + 5) % 360;
-		cout << "foot: " << foot << endl;
-		glutPostRedisplay();
-		break;
-	case 'Z':
-		foot = (foot - 5) % 360;
-		cout << "foot: " << foot << endl;
-		glutPostRedisplay();
-		break;
-	case 'x':
-		leg3 = (leg3 + 5) % 360;
-		cout << "leg3: " << leg3 << endl;
-		glutPostRedisplay();
-		break;
-	case 'X':
-		leg3 = (leg3 - 5) % 360;
-		cout << "leg3: " << leg3 << endl;
-		glutPostRedisplay();
-		break;
-	case 'c':
-		leg2 = (leg2 + 5) % 360;
-		cout << "leg2: " << leg2 << endl;
-		glutPostRedisplay();
-		break;
-	case 'C':
-		leg2 = (leg2 - 5) % 360;
-		cout << "leg2: " << leg2 << endl;
-		glutPostRedisplay();
-		break;
-	case 'b':
-		leg1Y = (leg1Y + 5) % 360;
-		cout << "leg1Y: " << leg1Y << endl;
-		glutPostRedisplay();
-		break;
-	case 'B':
-		leg1Y = (leg1Y - 5) % 360;
-		cout << "leg1Y: " << leg1Y << endl;
-		glutPostRedisplay();
-		break;
-	case 'n':
-		leg1Z = (leg1Z + 5) % 360;
-		cout << "leg1Z: " << leg1Z << endl;
-		glutPostRedisplay();
-		break;
-	case 'N':
-		leg1Z = (leg1Z - 5) % 360;
-		cout << "leg1Z: " << leg1Z << endl;
-		glutPostRedisplay();
-		break;
-	/*case 't':
-		torso = (torso+ 5) % 360;
-		glutPostRedisplay();
-		break;
-	case 'T':
-		torso = (torso - 5) % 360;
-		glutPostRedisplay();
-		break;*/
-	case 'j' :
-		posX += 0.1f;
-		glutPostRedisplay();
-		break;
-	case 'J':
-		posX -= 0.1f;
-		glutPostRedisplay();
-		break;
-	case 'k':
-		posY += 0.1f;
-		glutPostRedisplay();
-		break;
-	case 'K':
-		posY -= 0.1f;
-		glutPostRedisplay();
-		break;
-	case 'l'://Capture the current frame into the keyFrames
-		keyFrames.push_back(model_parameters());
-		keyFrames[END_FRAME].hand_rotation = hand;
-		keyFrames[END_FRAME].elbow_rotation = elbow;
-		keyFrames[END_FRAME].shoulderZ_rotation = shoulderZ;
-		keyFrames[END_FRAME].foot_rotation = foot;
-		keyFrames[END_FRAME].leg1Y_rotation = leg1Y;
-		keyFrames[END_FRAME].leg1Z_rotation = leg1Z;
-		keyFrames[END_FRAME].leg2_rotation = leg2;
-		keyFrames[END_FRAME].leg3_rotation = leg3;
-		keyFrames[END_FRAME].translateX = posX;
-		keyFrames[END_FRAME].translateY = posY;
-		END_FRAME++;//Increment the end frame number.
-		break;
-	case 'p'://save the parameters in a text file (space separated)
-	{
-		ofstream myfile("parameters.txt");
-		if (myfile.is_open())
-		{
-			myfile << END_FRAME << endl;
-			for (int i = 0; i < END_FRAME; i++) {
-				myfile << keyFrames[i].hand_rotation << " "
-					<< keyFrames[i].elbow_rotation << " "
-					<< keyFrames[i].shoulderZ_rotation << " "
-					<< keyFrames[i].foot_rotation << " "
-					<< keyFrames[i].leg1Y_rotation << " "
-					<< keyFrames[i].leg1Z_rotation << " "
-					<< keyFrames[i].leg2_rotation << " "
-					<< keyFrames[i].leg3_rotation << " "
-					<< keyFrames[i].translateX << " "
-					<< keyFrames[i].translateY << endl;
-			}
-		}
-		else cout << "Unable to open file";
-		myfile.close();
+		readKeyFrames(frog);
+		frog.startTime = glutGet(GLUT_ELAPSED_TIME);
+		frog.TOTAL_FRAMES = 10.0f;
 	}
 		break;
+	case 32://Space bar start animation
+		glutIdleFunc(animate);//register idle callback
+		break;
+	//case 'z':
+	//	foot = (foot + 5) % 360;
+	//	cout << "foot: " << foot << endl;
+	//	glutPostRedisplay();
+	//	break;
+	//case 'Z':
+	//	foot = (foot - 5) % 360;
+	//	cout << "foot: " << foot << endl;
+	//	glutPostRedisplay();
+	//	break;
+	//case 'x':
+	//	leg3 = (leg3 + 5) % 360;
+	//	cout << "leg3: " << leg3 << endl;
+	//	glutPostRedisplay();
+	//	break;
+	//case 'X':
+	//	leg3 = (leg3 - 5) % 360;
+	//	cout << "leg3: " << leg3 << endl;
+	//	glutPostRedisplay();
+	//	break;
+	//case 'c':
+	//	leg2 = (leg2 + 5) % 360;
+	//	cout << "leg2: " << leg2 << endl;
+	//	glutPostRedisplay();
+	//	break;
+	//case 'C':
+	//	leg2 = (leg2 - 5) % 360;
+	//	cout << "leg2: " << leg2 << endl;
+	//	glutPostRedisplay();
+	//	break;
+	//case 'b':
+	//	leg1Y = (leg1Y + 5) % 360;
+	//	cout << "leg1Y: " << leg1Y << endl;
+	//	glutPostRedisplay();
+	//	break;
+	//case 'B':
+	//	leg1Y = (leg1Y - 5) % 360;
+	//	cout << "leg1Y: " << leg1Y << endl;
+	//	glutPostRedisplay();
+	//	break;
+	//case 'n':
+	//	leg1Z = (leg1Z + 5) % 360;
+	//	cout << "leg1Z: " << leg1Z << endl;
+	//	glutPostRedisplay();
+	//	break;
+	//case 'N':
+	//	leg1Z = (leg1Z - 5) % 360;
+	//	cout << "leg1Z: " << leg1Z << endl;
+	//	glutPostRedisplay();
+	//	break;
+	///*case 't':
+	//	torso = (torso+ 5) % 360;
+	//	glutPostRedisplay();
+	//	break;
+	//case 'T':
+	//	torso = (torso - 5) % 360;
+	//	glutPostRedisplay();
+	//	break;*/
+	//case 'j' :
+	//	posX += 0.1f;
+	//	glutPostRedisplay();
+	//	break;
+	//case 'J':
+	//	posX -= 0.1f;
+	//	glutPostRedisplay();
+	//	break;
+	//case 'k':
+	//	posY += 0.1f;
+	//	glutPostRedisplay();
+	//	break;
+	//case 'K':
+	//	posY -= 0.1f;
+	//	glutPostRedisplay();
+	//	break;
+	//case 'l'://Capture the current frame into the keyFrames
+	//	keyFrames.push_back(model_parameters());
+	//	keyFrames[END_FRAME].hand_rotation = hand;
+	//	keyFrames[END_FRAME].elbow_rotation = elbow;
+	//	keyFrames[END_FRAME].shoulderZ_rotation = shoulderZ;
+	//	keyFrames[END_FRAME].foot_rotation = foot;
+	//	keyFrames[END_FRAME].leg1Y_rotation = leg1Y;
+	//	keyFrames[END_FRAME].leg1Z_rotation = leg1Z;
+	//	keyFrames[END_FRAME].leg2_rotation = leg2;
+	//	keyFrames[END_FRAME].leg3_rotation = leg3;
+	//	keyFrames[END_FRAME].translateX = posX;
+	//	keyFrames[END_FRAME].translateY = posY;
+	//	END_FRAME++;//Increment the end frame number.
+	//	break;
+	//case 'p'://save the parameters in a text file (space separated)
+	//{
+	//	ofstream myfile("parameters.txt");
+	//	if (myfile.is_open())
+	//	{
+	//		myfile << END_FRAME << endl;
+	//		for (int i = 0; i < END_FRAME; i++) {
+	//			myfile << keyFrames[i].hand_rotation << " "
+	//				<< keyFrames[i].elbow_rotation << " "
+	//				<< keyFrames[i].shoulderZ_rotation << " "
+	//				<< keyFrames[i].foot_rotation << " "
+	//				<< keyFrames[i].leg1Y_rotation << " "
+	//				<< keyFrames[i].leg1Z_rotation << " "
+	//				<< keyFrames[i].leg2_rotation << " "
+	//				<< keyFrames[i].leg3_rotation << " "
+	//				<< keyFrames[i].translateX << " "
+	//				<< keyFrames[i].translateY << endl;
+	//		}
+	//	}
+	//	else cout << "Unable to open file";
+	//	myfile.close();
+	//}
+	//	break;
 	case 27://ASCII code for Escape Key
 		exit(0);
 		break;
@@ -776,68 +920,77 @@ int main(int argc, char** argv) {
 }
 
 void animate() {
-	if (increasePosX) {
-		posX_initial = posX_abs;
-		posZ_initial = posZ_abs;
-		torso = atan2(posZ_initial*0.15f - camZPos, camXPos - posX_initial*0.15f) * 180 / 3.14;
-		//cout << torso << " " << posZ_initial << " " << camZPos << endl;
-		increasePosX = false;
-	}
-	elapsedTime = glutGet(GLUT_ELAPSED_TIME);
-	Sleep(max(0,17-(elapsedTime-prevTime)));
-	prevTime = elapsedTime;
-	elapsedTime = glutGet(GLUT_ELAPSED_TIME);
-
-	t_interpolation = ((elapsedTime - startTime)*(FPS))/(1000.0f * TOTAL_FRAMES);
-	int next_frame = currentFrame + 1;
-	//Interpolate all the parameters of the model
-	hand = lerp(keyFrames[currentFrame].hand_rotation, keyFrames[next_frame].hand_rotation,t_interpolation);
-	elbow = lerp(keyFrames[currentFrame].elbow_rotation, keyFrames[next_frame].elbow_rotation, t_interpolation);
-	shoulderZ = lerp(keyFrames[currentFrame].shoulderZ_rotation, keyFrames[next_frame].shoulderZ_rotation, t_interpolation);
-	
-	foot = lerp(keyFrames[currentFrame].foot_rotation, keyFrames[next_frame].foot_rotation, t_interpolation);
-	leg1Y = lerp(keyFrames[currentFrame].leg1Y_rotation, keyFrames[next_frame].leg1Y_rotation, t_interpolation);
-	leg1Z = lerp(keyFrames[currentFrame].leg1Z_rotation, keyFrames[next_frame].leg1Z_rotation, t_interpolation);
-	leg2 = lerp(keyFrames[currentFrame].leg2_rotation, keyFrames[next_frame].leg2_rotation, t_interpolation);
-	leg3 = lerp(keyFrames[currentFrame].leg3_rotation, keyFrames[next_frame].leg3_rotation, t_interpolation);
-	
-	posX = lerp(keyFrames[currentFrame].translateX, keyFrames[next_frame].translateX, t_interpolation);
-	posY = lerp(keyFrames[currentFrame].translateY, keyFrames[next_frame].translateY, t_interpolation);
-	
-	glutPostRedisplay();
-	
-	if (t_interpolation > 1.0f - epsilon) {
-		currentFrame++;
-		if (currentFrame == END_FRAME - 1) {
-			glutIdleFunc(NULL);
-			increasePosX = true;
-			//added code
-			currentFrame = START_FRAME;
-			//END_FRAME--;
-			//fillKeyFrames();//initialize the keyFrames vector
-			readKeyFrames();
-			startTime = glutGet(GLUT_ELAPSED_TIME);
-			TOTAL_FRAMES = 10.0f;
-			glutIdleFunc(animate);//register idle callback
-			//end
+	for (int indexFrog = 0; indexFrog < frogs.size(); indexFrog++) {
+		struct frog& frog = frogs[indexFrog];
+		if (frog.increasePosX) {
+			frog.posX_initial = frog.posX_abs;
+			frog.posZ_initial = frog.posZ_abs;
+			frog.torso = atan2((frog.posZ_initial)*0.15f - camZPos, camXPos - (frog.posX_initial)*0.15f) * 180 / 3.14;
+			//cout << torso << " " << posZ_initial << " " << camZPos << endl;
+			frog.increasePosX = false;
 		}
-		else if (currentFrame == 7)
-			TOTAL_FRAMES = 4.0f;
-		startTime = glutGet(GLUT_ELAPSED_TIME);
+		frog.elapsedTime = glutGet(GLUT_ELAPSED_TIME);
+		Sleep(max(0, 17 - (frog.elapsedTime - frog.prevTime)));
+		frog.prevTime = frog.elapsedTime;
+		frog.elapsedTime = glutGet(GLUT_ELAPSED_TIME);
+
+		frog.t_interpolation = ((frog.elapsedTime - frog.startTime)*(frog.FPS)) / (1000.0f * frog.TOTAL_FRAMES);
+		int currentFrame = frog.currentFrame;
+		int next_frame = currentFrame + 1;
+		int t_interpolation = frog.t_interpolation;
+
+		vector<model_parameters>& keyFrames = frog.keyFrames;
+		//Interpolate all the parameters of the model
+		frog.hand = lerp(keyFrames[currentFrame].hand_rotation, keyFrames[next_frame].hand_rotation, t_interpolation);
+		frog.elbow = lerp(keyFrames[currentFrame].elbow_rotation, keyFrames[next_frame].elbow_rotation, t_interpolation);
+		frog.shoulderZ = lerp(keyFrames[currentFrame].shoulderZ_rotation, keyFrames[next_frame].shoulderZ_rotation, t_interpolation);
+
+		frog.foot = lerp(keyFrames[currentFrame].foot_rotation, keyFrames[next_frame].foot_rotation, t_interpolation);
+		frog.leg1Y = lerp(keyFrames[currentFrame].leg1Y_rotation, keyFrames[next_frame].leg1Y_rotation, t_interpolation);
+		frog.leg1Z = lerp(keyFrames[currentFrame].leg1Z_rotation, keyFrames[next_frame].leg1Z_rotation, t_interpolation);
+		frog.leg2 = lerp(keyFrames[currentFrame].leg2_rotation, keyFrames[next_frame].leg2_rotation, t_interpolation);
+		frog.leg3 = lerp(keyFrames[currentFrame].leg3_rotation, keyFrames[next_frame].leg3_rotation, t_interpolation);
+
+		frog.posX = lerp(keyFrames[currentFrame].translateX, keyFrames[next_frame].translateX, t_interpolation);
+		frog.posY = lerp(keyFrames[currentFrame].translateY, keyFrames[next_frame].translateY, t_interpolation);
+
+		/*glutPostRedisplay();*/
+
+		if (t_interpolation > 1.0f - epsilon) {
+			frog.currentFrame++;
+			if (frog.currentFrame == frog.END_FRAME - 1) {
+				//glutIdleFunc(NULL);
+				frog.increasePosX = true;
+				//added code
+				frog.currentFrame = frog.START_FRAME;
+				//END_FRAME--;
+				//fillKeyFrames();//initialize the keyFrames vector
+				//readKeyFrames(frog);
+				frog.startTime = glutGet(GLUT_ELAPSED_TIME);
+				frog.TOTAL_FRAMES = 10.0f;
+				//glutIdleFunc(animate);//register idle callback
+				//end
+			}
+			else if (frog.currentFrame == 7)
+				frog.TOTAL_FRAMES = 4.0f;
+			frog.startTime = glutGet(GLUT_ELAPSED_TIME);
+		}
 	}
+	glutPostRedisplay();
 }
 
-void fillKeyFrames() {
-	keyFrames.clear();
-	keyFrames.push_back(model_parameters());
-	keyFrames[START_FRAME].hand_rotation = hand;
-	for (int i = 1; i <= END_FRAME; i++) {
-		keyFrames.push_back(model_parameters());
-		keyFrames[i].hand_rotation = keyFrames[i-1].hand_rotation - 3.0f;
-	}
-}
+//void fillKeyFrames() {
+//	keyFrames.clear();
+//	keyFrames.push_back(model_parameters());
+//	keyFrames[START_FRAME].hand_rotation = hand;
+//	for (int i = 1; i <= END_FRAME; i++) {
+//		keyFrames.push_back(model_parameters());
+//		keyFrames[i].hand_rotation = keyFrames[i-1].hand_rotation - 3.0f;
+//	}
+//}
 
-void readKeyFrames() {
+void readKeyFrames(frog& frog) {
+	vector<model_parameters>& keyFrames = frog.keyFrames;
 	ifstream infile;
 	infile.open("parameters.txt");
 	keyFrames.clear();
@@ -846,9 +999,9 @@ void readKeyFrames() {
 	//read number of key frames
 	getline(infile, line);
 	istringstream iss(line);
-	iss >> END_FRAME;
+	iss >> frog.END_FRAME;
 	//END_FRAME--;
-	for(int i = 0; i < END_FRAME; i++)
+	for(int i = 0; i < frog.END_FRAME; i++)
 	{
 		getline(infile,line);
 		istringstream iss(line);
