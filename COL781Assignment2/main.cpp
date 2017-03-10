@@ -277,7 +277,7 @@ void handleKeypressUp(unsigned char theKey, int x, int y)
 			//initialize frog
 			frog.START_FRAME = 0;
 			frog.END_FRAME = 0;//Changed we will dynamically decide how many frames to take
-			frog.FPS = 60.0f;
+			cin >> frog.FPS;
 			frog.TOTAL_FRAMES = 10.0f;
 			//Total frames to be displayed in the linear interpolation performed during the interval between consecutive key-frames
 
@@ -592,6 +592,22 @@ void drawModel(frog& frog) {
 }
 
 void display() {
+	//checking for GAME OVER:-
+	float lx = 3.5f*cos(0.3589), ly = 3.5f*sin(0.3589);
+	for (int i = 0; i < frogs.size(); i++) {
+		float xtemp = frogs[i].posX_abs, ztemp = frogs[i].posZ_abs, ytemp = ly;
+		xtemp = xtemp + lx*cos(frogs[i].torso);
+		ztemp = ztemp - lx*sin(frogs[i].torso);
+		xtemp = pow(camXPos - xtemp*0.15f, 2) + pow(1.0f - ytemp*0.15f, 2) + pow(ztemp*0.15f - camZPos, 2);
+		xtemp = sqrt(xtemp);
+		if (xtemp <= 2.0f) {
+			cout << "GAME OVER" << endl;
+			glClearColor(1.0f, 0.0f, 0.0f, 1.0f); 
+			glutSwapBuffers();
+			glutIdleFunc(NULL);
+		}
+	}
+
 	handleMouseMove();
 	calculateCameraMovement();
 	moveCamera();
