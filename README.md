@@ -1,7 +1,7 @@
 # COL781 Assignment 2
 A 3D game in which your task is to avoid being caught by frog(s). You can add multiple frogs with varying speeds in the simulation. Each frog tries to align itself along your location (First-Person camera) once it lands after completing a jump. If you are caught by a frog, screen turns red.
 
-Read assignment report for certain implementational details.
+This is a Visual Studio 2015 project that uses OpenGL for graphical rendering. Read assignment report for certain implementational details.
 
 ### Running the code
 The project is implemented in Visual Studio. Open the solution file for running the code.
